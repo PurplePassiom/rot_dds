@@ -1,0 +1,3 @@
+"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\PublishHelloWorldClient.dir/objects.a
+C:\mingw64\bin\ar.exe qc CMakeFiles\PublishHelloWorldClient.dir/objects.a @CMakeFiles\PublishHelloWorldClient.dir\objects1.rsp
+C:\mingw64\bin\gcc.exe -g -Wl,--dependency-file,CMakeFiles\PublishHelloWorldClient.dir\link.d -Wl,--whole-archive CMakeFiles\PublishHelloWorldClient.dir/objects.a -Wl,--no-whole-archive -o PublishHelloWorldClient.exe -Wl,--out-implib,libPublishHelloWorldClient.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\PublishHelloWorldClient.dir\linkLibs.rsp
