@@ -24,6 +24,25 @@
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
 
+void on_topic(
+        uxrSession* session,
+        uxrObjectId object_id,
+        uint16_t request_id,
+        uxrStreamId stream_id,
+        struct ucdrBuffer* ub,
+        uint16_t length,
+        void* args)
+{
+    (void) session; (void) object_id; (void) request_id; (void) stream_id; (void) length;
+
+    HelloWorld topic;
+    HelloWorld_deserialize_topic(ub, &topic);
+
+    printf("Received topic: %s, id: %i\n", topic.message, topic.index);
+
+    uint32_t* count_ptr = (uint32_t*) args;
+    (*count_ptr)++;
+}
 int main(
         int args,
         char** argv)
@@ -37,7 +56,7 @@ int main(
 
     char* ip = argv[1];
     char* port = argv[2];
-    uint32_t max_topics = (args == 4) ? (uint32_t)atoi(argv[3]) : UINT32_MAX;
+    uint32_t max_topics = 1;
 
     // Transport
     uxrUDPTransport transport;
@@ -46,15 +65,17 @@ int main(
         printf("Error at create transport.\n");
         return 1;
     }
-
+    // State
+    uint32_t icount = 0;
     // Session
     uxrSession session;
-    uxr_init_session(&session, &transport.comm, 0xAAAABBBB);
-    if (!uxr_create_session(&session))
-    {
-        printf("Error at create session.\n");
-        return 1;
-    }
+    uxr_init_session(&session, &transport.comm, 0x81,0xAAAABBBB);
+    uxr_set_topic_callback(&session, on_topic, &icount);
+    // if (!uxr_create_session(&session))
+    // {
+    //     printf("Error at create session.\n");
+    //     return 1;
+    // }
 
     // Streams
     uint8_t output_reliable_stream_buffer[BUFFER_SIZE];
@@ -66,6 +87,9 @@ int main(
 
     // Create entities
     uxrObjectId participant_id = uxr_object_id(0x01, UXR_PARTICIPANT_ID);
+    uxrObjectId topic_id = uxr_object_id(0x01, UXR_TOPIC_ID);
+    uxrObjectId datawriter_id = uxr_object_id(0x01, UXR_DATAREADER_ID);
+    #if 0
     const char* participant_xml = "<dds>"
             "<participant>"
             "<rtps>"
@@ -115,7 +139,7 @@ int main(
                 status[1], status[2], status[3]);
         return 1;
     }
-
+#endif
     // Write topics
     bool connected = true;
     uint32_t count = 0;
@@ -135,7 +159,7 @@ int main(
     }
 
     // Delete resources
-    uxr_delete_session(&session);
+    // uxr_delete_session(&session);
     uxr_close_udp_transport(&transport);
 
     return 0;
