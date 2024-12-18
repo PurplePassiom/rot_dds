@@ -169,7 +169,7 @@ bool uxr_read_session_header(
         uint8_t session_id; uint8_t key[CLIENT_KEY_SIZE];
         uxr_deserialize_message_header(ub, &session_id, stream_id_raw, seq_num, key);
 
-        must_be_read = session_id == info->id;
+        must_be_read = true;//session_id == info->id;
         if (must_be_read)
         {
             if (SESSION_ID_WITHOUT_CLIENT_KEY > info->id)

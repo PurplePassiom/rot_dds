@@ -29,7 +29,7 @@ void uxr_deserialize_message_header(
     (void) ucdr_deserialize_uint8_t(ub, session_id);
     (void) ucdr_deserialize_uint8_t(ub, stream_id);
     (void) ucdr_deserialize_endian_uint16_t(ub, UCDR_LITTLE_ENDIANNESS, seq_num);
-    //if (SESSION_ID_WITHOUT_CLIENT_KEY > *session_id)
+    if (SESSION_ID_WITHOUT_CLIENT_KEY > *session_id)
     {
         (void) ucdr_deserialize_array_uint8_t(ub, key, CLIENT_KEY_SIZE);
     }

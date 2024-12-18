@@ -21,6 +21,8 @@
 #include <string.h> //strcmp
 #include <stdlib.h> //atoi
 
+#include "selfcom_transport.h"
+
 #define STREAM_HISTORY  8
 #define BUFFER_SIZE     UXR_CONFIG_UDP_TRANSPORT_MTU* STREAM_HISTORY
 
@@ -78,7 +80,6 @@ int main(
     // }
 
     // Streams
-    uint8_t output_reliable_stream_buffer[BUFFER_SIZE];
     uxrStreamId reliable_out = uxr_create_output_reliable_stream(&session, output_reliable_stream_buffer, BUFFER_SIZE,
                     STREAM_HISTORY);
 
@@ -151,9 +152,11 @@ int main(
 
         ucdrBuffer ub;
         uint32_t topic_size = HelloWorld_size_of_topic(&topic, 0);
-        uxr_prepare_output_stream(&session, reliable_out, datawriter_id, &ub, topic_size);
+        uxr_prepare_output_stream(&session, reliable_out, object_id, &ub, topic_size);
         HelloWorld_serialize_topic(&ub, &topic);
-
+        topic.index = 2;
+        uxr_prepare_output_stream(&session, reliable_out, object_id, &ub, topic_size);
+        HelloWorld_serialize_topic(&ub, &topic);
         printf("Send topic: %s, id: %i\n", topic.message, topic.index);
         connected = uxr_run_session_time(&session, 1000);
     }

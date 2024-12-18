@@ -28,6 +28,7 @@ extern "C"
 #include <uxr/client/core/session/session_info.h>
 #include <uxr/client/core/session/stream/stream_storage.h>
 #include <uxr/client/core/type/xrce_types.h>
+#include <uxr/client/core/communication/communication.h>
 
 #ifdef UCLIENT_PROFILE_MULTITHREAD
 #include <uxr/client/profile/multithread/multithread.h>
@@ -222,7 +223,8 @@ typedef struct uxrSession
  */
 UXRDLLAPI void uxr_init_session(
         uxrSession* session,
-        struct uxrCommunication* comm,
+        uint8_t session_id,
+        uxrCommunication* comm,
         uint32_t key);
 
 /**

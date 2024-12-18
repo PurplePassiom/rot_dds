@@ -296,6 +296,54 @@ main.c.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/main.c.s
 .PHONY : main.c.s
 
+queue.obj: queue.c.obj
+.PHONY : queue.obj
+
+# target to build an object file
+queue.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj
+.PHONY : queue.c.obj
+
+queue.i: queue.c.i
+.PHONY : queue.i
+
+# target to preprocess a source file
+queue.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/queue.c.i
+.PHONY : queue.c.i
+
+queue.s: queue.c.s
+.PHONY : queue.s
+
+# target to generate assembly for a file
+queue.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/queue.c.s
+.PHONY : queue.c.s
+
+selfcom_transport.obj: selfcom_transport.c.obj
+.PHONY : selfcom_transport.obj
+
+# target to build an object file
+selfcom_transport.c.obj:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj
+.PHONY : selfcom_transport.c.obj
+
+selfcom_transport.i: selfcom_transport.c.i
+.PHONY : selfcom_transport.i
+
+# target to preprocess a source file
+selfcom_transport.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.i
+.PHONY : selfcom_transport.c.i
+
+selfcom_transport.s: selfcom_transport.c.s
+.PHONY : selfcom_transport.s
+
+# target to generate assembly for a file
+selfcom_transport.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles\PublishHelloWorldClient.dir\build.make CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.s
+.PHONY : selfcom_transport.c.s
+
 src/c/core/serialization/xrce_header.obj: src/c/core/serialization/xrce_header.c.obj
 .PHONY : src/c/core/serialization/xrce_header.obj
 
@@ -974,6 +1022,12 @@ help:
 	@echo ... main.obj
 	@echo ... main.i
 	@echo ... main.s
+	@echo ... queue.obj
+	@echo ... queue.i
+	@echo ... queue.s
+	@echo ... selfcom_transport.obj
+	@echo ... selfcom_transport.i
+	@echo ... selfcom_transport.s
 	@echo ... src/c/core/serialization/xrce_header.obj
 	@echo ... src/c/core/serialization/xrce_header.i
 	@echo ... src/c/core/serialization/xrce_header.s

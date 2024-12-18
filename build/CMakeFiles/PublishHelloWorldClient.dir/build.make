@@ -473,11 +473,41 @@ CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/write_access.c.s: cmak
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/write_access.c.s"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\86182\Desktop\temp\src\c\core\session\write_access.c -o CMakeFiles\PublishHelloWorldClient.dir\src\c\core\session\write_access.c.s
 
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/flags.make
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj: C:/Users/86182/Desktop/temp/selfcom_transport.c
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\selfcom_transport.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\selfcom_transport.c.obj -c C:\Users\86182\Desktop\temp\selfcom_transport.c
+
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.i"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\86182\Desktop\temp\selfcom_transport.c > CMakeFiles\PublishHelloWorldClient.dir\selfcom_transport.c.i
+
+CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.s"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\86182\Desktop\temp\selfcom_transport.c -o CMakeFiles\PublishHelloWorldClient.dir\selfcom_transport.c.s
+
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj: CMakeFiles/PublishHelloWorldClient.dir/flags.make
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj: C:/Users/86182/Desktop/temp/queue.c
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building C object CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\queue.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\queue.c.obj -c C:\Users\86182\Desktop\temp\queue.c
+
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing C source to CMakeFiles/PublishHelloWorldClient.dir/queue.c.i"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -E C:\Users\86182\Desktop\temp\queue.c > CMakeFiles\PublishHelloWorldClient.dir\queue.c.i
+
+CMakeFiles/PublishHelloWorldClient.dir/queue.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling C source to assembly CMakeFiles/PublishHelloWorldClient.dir/queue.c.s"
+	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -S C:\Users\86182\Desktop\temp\queue.c -o CMakeFiles\PublishHelloWorldClient.dir\queue.c.s
+
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj: CMakeFiles/PublishHelloWorldClient.dir/flags.make
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj: C:/Users/86182/Desktop/temp/src/c/profile/transport/stream_framing/stream_framing_protocol.c
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_28) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\stream_framing\stream_framing_protocol.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\stream_framing\stream_framing_protocol.c.obj -c C:\Users\86182\Desktop\temp\src\c\profile\transport\stream_framing\stream_framing_protocol.c
 
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.i: cmake_force
@@ -492,7 +522,7 @@ CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj: C:/Users/86182/Desktop/temp/src/c/profile/transport/ip/udp/udp_transport.c
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_29) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\udp\udp_transport.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\udp\udp_transport.c.obj -c C:\Users\86182\Desktop\temp\src\c\profile\transport\ip\udp\udp_transport.c
 
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.i: cmake_force
@@ -507,7 +537,7 @@ CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj: C:/Users/86182/Desktop/temp/src/c/profile/transport/ip/udp/udp_transport_windows.c
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_30) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\udp\udp_transport_windows.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\udp\udp_transport_windows.c.obj -c C:\Users\86182\Desktop\temp\src\c\profile\transport\ip\udp\udp_transport_windows.c
 
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.i: cmake_force
@@ -522,7 +552,7 @@ CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.o
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj: C:/Users/86182/Desktop/temp/src/c/profile/transport/ip/ip_windows.c
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_31) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\ip_windows.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\ip\ip_windows.c.obj -c C:\Users\86182\Desktop\temp\src\c\profile\transport\ip\ip_windows.c
 
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/ip_windows.c.i: cmake_force
@@ -537,7 +567,7 @@ CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_tra
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj: C:/Users/86182/Desktop/temp/src/c/profile/transport/custom/custom_transport.c
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_32) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\custom\custom_transport.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\src\c\profile\transport\custom\custom_transport.c.obj -c C:\Users\86182\Desktop\temp\src\c\profile\transport\custom\custom_transport.c
 
 CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/custom/custom_transport.c.i: cmake_force
@@ -552,7 +582,7 @@ CMakeFiles/PublishHelloWorldClient.dir/main.c.obj: CMakeFiles/PublishHelloWorldC
 CMakeFiles/PublishHelloWorldClient.dir/main.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/main.c.obj: C:/Users/86182/Desktop/temp/main.c
 CMakeFiles/PublishHelloWorldClient.dir/main.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_33) "Building C object CMakeFiles/PublishHelloWorldClient.dir/main.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Building C object CMakeFiles/PublishHelloWorldClient.dir/main.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/main.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\main.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\main.c.obj -c C:\Users\86182\Desktop\temp\main.c
 
 CMakeFiles/PublishHelloWorldClient.dir/main.c.i: cmake_force
@@ -567,7 +597,7 @@ CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj: CMakeFiles/PublishHello
 CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj: CMakeFiles/PublishHelloWorldClient.dir/includes_C.rsp
 CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj: C:/Users/86182/Desktop/temp/HelloWorld.c
 CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj: CMakeFiles/PublishHelloWorldClient.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_34) "Building C object CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_36) "Building C object CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj"
 	C:\mingw64\bin\gcc.exe $(C_DEFINES) $(C_INCLUDES) $(C_FLAGS) -MD -MT CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj -MF CMakeFiles\PublishHelloWorldClient.dir\HelloWorld.c.obj.d -o CMakeFiles\PublishHelloWorldClient.dir\HelloWorld.c.obj -c C:\Users\86182\Desktop\temp\HelloWorld.c
 
 CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.i: cmake_force
@@ -607,6 +637,8 @@ PublishHelloWorldClient_OBJECTS = \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/create_entities_bin.c.obj" \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/read_access.c.obj" \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/write_access.c.obj" \
+"CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj" \
+"CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj" \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj" \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj" \
 "CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj" \
@@ -645,6 +677,8 @@ PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/core/s
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/create_entities_bin.c.obj
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/read_access.c.obj
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/core/session/write_access.c.obj
+PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj
+PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/stream_framing/stream_framing_protocol.c.obj
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport.c.obj
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/src/c/profile/transport/ip/udp/udp_transport_windows.c.obj
@@ -657,7 +691,7 @@ PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/compiler_dep
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/linkLibs.rsp
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/objects1.rsp
 PublishHelloWorldClient.exe: CMakeFiles/PublishHelloWorldClient.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_35) "Linking C executable PublishHelloWorldClient.exe"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=C:\Users\86182\Desktop\temp\build\CMakeFiles --progress-num=$(CMAKE_PROGRESS_37) "Linking C executable PublishHelloWorldClient.exe"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles\PublishHelloWorldClient.dir\link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
