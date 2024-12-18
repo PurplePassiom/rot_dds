@@ -120,7 +120,7 @@ uint16_t uxr_prepare_output_stream(
 
     size_t payload_size = WRITE_DATA_PAYLOAD_SIZE + len;
 
-    ub->error = !uxr_prepare_stream_to_write_submessage(session, stream_id, payload_size, ub, SUBMESSAGE_ID_WRITE_DATA,
+    ub->error = !uxr_prepare_stream_to_write_submessage(session, stream_id, payload_size, ub, SUBMESSAGE_ID_DATA,
                     FORMAT_DATA);
     if (!ub->error)
     {

@@ -175,6 +175,9 @@ set(SRCS
     src/c/core/session/create_entities_bin.c
     src/c/core/session/read_access.c
     src/c/core/session/write_access.c
+    selfcom_transport.c
+    queue.c
+    # src/c/profile/transport/tp_socket.c
     $<$<BOOL:${UCLIENT_PROFILE_MULTITHREAD}>:src/c/profile/multithread/multithread.c>
     $<$<BOOL:${UCLIENT_PROFILE_SHARED_MEMORY}>:src/c/profile/shared_memory/shared_memory.c>
     $<$<BOOL:${UCLIENT_PROFILE_MATCHING}>:src/c/profile/matching/matching.c>

@@ -128,6 +128,7 @@ static bool send_udp_msg(
     if (share_len == 0)
     {
         memcpy(share_buff, buf, len);
+        share_buff[0] +=1;
         share_len = len;
         return true;
     }
@@ -143,10 +144,17 @@ static bool recv_udp_msg(
         size_t* len,
         int timeout)
 {
-    *buf = share_buff;
-    *len = share_len;
-    share_len = 0;
-    return true;
+    if (share_len == 0)
+    {
+        return false;
+    }
+    else
+    {
+        *buf = share_buff;
+        *len = share_len;
+        share_len = 0;
+        return true;
+    }
 }
 
 

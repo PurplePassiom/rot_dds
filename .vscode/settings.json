@@ -1,0 +1,14 @@
+{
+    "files.associations": {
+        "udp_transport_internal.h": "c",
+        "multithread.h": "c",
+        "communication.h": "c",
+        "config.h": "c",
+        "tcp_transport_internal.h": "c",
+        "client.h": "c",
+        "tp_socket.h": "c",
+        "tp_socket_config.h": "c",
+        "queue.h": "c",
+        "selfcom_transport.h": "c"
+    }
+}

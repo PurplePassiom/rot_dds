@@ -147,6 +147,7 @@ static bool run_session_until_sync(
 
 void uxr_init_session(
         uxrSession* session,
+        uint8_t session_id,
         uxrCommunication* comm,
         uint32_t key)
 {
@@ -168,7 +169,7 @@ void uxr_init_session(
     session->time_offset = 0;
     session->synchronized = false;
 
-    uxr_init_session_info(&session->info, 0x81, key);
+    uxr_init_session_info(&session->info, session_id, key);
     uxr_init_stream_storage(&session->streams);
 }
 
@@ -896,7 +897,7 @@ void read_stream(
                     read_submessage_list(session, &next_mb, stream_id);
                 }
             }
-            write_submessage_acknack(session, stream_id);
+            // write_submessage_acknack(session, stream_id);
             break;
         }
         default:

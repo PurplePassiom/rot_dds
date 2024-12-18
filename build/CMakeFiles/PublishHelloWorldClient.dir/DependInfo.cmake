@@ -15,6 +15,8 @@ set(CMAKE_DEPENDS_DEPENDENCY_FILES
   "C:/Users/86182/Desktop/temp/CDR/string.c" "CMakeFiles/PublishHelloWorldClient.dir/CDR/string.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/CDR/string.c.obj.d"
   "C:/Users/86182/Desktop/temp/HelloWorld.c" "CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/HelloWorld.c.obj.d"
   "C:/Users/86182/Desktop/temp/main.c" "CMakeFiles/PublishHelloWorldClient.dir/main.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/main.c.obj.d"
+  "C:/Users/86182/Desktop/temp/queue.c" "CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/queue.c.obj.d"
+  "C:/Users/86182/Desktop/temp/selfcom_transport.c" "CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/selfcom_transport.c.obj.d"
   "C:/Users/86182/Desktop/temp/src/c/core/serialization/xrce_header.c" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_header.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_header.c.obj.d"
   "C:/Users/86182/Desktop/temp/src/c/core/serialization/xrce_subheader.c" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_subheader.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_subheader.c.obj.d"
   "C:/Users/86182/Desktop/temp/src/c/core/serialization/xrce_types.c" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_types.c.obj" "gcc" "CMakeFiles/PublishHelloWorldClient.dir/src/c/core/serialization/xrce_types.c.obj.d"
