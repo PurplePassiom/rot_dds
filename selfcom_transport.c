@@ -17,11 +17,13 @@ typedef struct
 static self_com_tp_type self_com;
 static uxrCommunication self_com_urxCom;
 
+#include <stdio.h>
 static bool send_self_com_msg(
         void* instance,
         const uint8_t* buf,
         size_t len)
 {
+    
     bool rv = false;
     if (self_com.is_inited == false)
     {
@@ -33,6 +35,12 @@ static bool send_self_com_msg(
         {
             rv = true;
         }
+        printf("\nrv:%d len:%d data: ",rv, len);
+        for (size_t i = 0; i < len; i++)
+        {
+            printf("%c",buf[i]);
+        }
+        printf("--------------send end\n");
     }
     return rv;
 }
@@ -49,13 +57,19 @@ static bool recv_self_com_msg(
     {
         rv = false;
     }
-    else if (0 > queue_size(&self_com.self_com_queue))
+    else if (0 >= queue_size(&self_com.self_com_queue))
     {
         rv = false;
     }
     else
     {
         size_t size = queue_pop(&self_com.self_com_queue, self_com.rx_buff, SELF_COM_TRANSPORT_RX_SIZE);
+        printf("\npop size:%d data:",size);
+        for (size_t i = 0; i < size; i++)
+        {
+            printf("%c",self_com.rx_buff[i]);
+        }
+        printf("--------pop end\n");
         if (size)
         {
             *buf = self_com.rx_buff;

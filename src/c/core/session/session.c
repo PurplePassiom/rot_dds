@@ -318,7 +318,7 @@ uxrStreamId uxr_create_input_reliable_stream(
 {
     return uxr_add_input_reliable_buffer(&session->streams, buffer, size, history, on_get_fragmentation_info);
 }
-
+#include<stdio.h>
 bool uxr_run_session_time(
         uxrSession* session,
         int timeout_ms)
@@ -326,7 +326,8 @@ bool uxr_run_session_time(
     UXR_LOCK_SESSION(session);
 
     uxr_flash_output_streams(session);
-
+    listen_message_reliably(session, timeout_ms);
+#if 0
     bool timeout = false;
     while (!timeout)
     {
@@ -337,6 +338,8 @@ bool uxr_run_session_time(
     UXR_UNLOCK_SESSION(session);
 
     return ret;
+    #endif
+    return 1;
 }
 
 bool uxr_run_session_timeout(
@@ -691,7 +694,7 @@ bool listen_message_reliably(
 {
     bool received = false;
     int32_t poll = (poll_ms >= 0) ? poll_ms : INT32_MAX;
-    do
+    
     {
         int64_t next_heartbeat_timestamp = INT64_MAX;
         int64_t timestamp = uxr_millis();
@@ -727,7 +730,6 @@ bool listen_message_reliably(
             poll -= poll_chosen;
         }
     }
-    while (!received && poll > 0);
 
     return received;
 }
@@ -897,7 +899,7 @@ void read_stream(
                     read_submessage_list(session, &next_mb, stream_id);
                 }
             }
-            // write_submessage_acknack(session, stream_id);
+            write_submessage_acknack(session, stream_id);
             break;
         }
         default:
