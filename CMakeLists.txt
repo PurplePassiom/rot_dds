@@ -67,7 +67,7 @@ set(UCLIENT_SERIAL_TRANSPORT_MTU 512 CACHE STRING "Set the Serial transport MTU.
 option(UCLIENT_PROFILE_CUSTOM_TRANSPORT "Enable Custom transport." ON)
 set(UCLIENT_CUSTOM_TRANSPORT_MTU 512 CACHE STRING "Set the Custom transport MTU.")
 
-option(UCLIENT_PROFILE_MULTITHREAD "Enable multithread support." OFF)
+option(UCLIENT_PROFILE_MULTITHREAD "Enable multithread support." ON)
 option(UCLIENT_PROFILE_SHARED_MEMORY "Enable shared memory transport support." OFF)
 option(UCLIENT_PROFILE_MATCHING "Enable QoS matching support." OFF)
 set(UCLIENT_SHARED_MEMORY_MAX_ENTITIES 4 CACHE STRING "Max number of entities involved in shared memory.")
@@ -88,17 +88,17 @@ set(UCLIENT_PLATFORM_POSIX OFF)
 set(_transport_src)
 
 if(UCLIENT_PROFILE_UDP)
-    list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport.c)
+    # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport.c)
     if(UCLIENT_PLATFORM_POSIX)
-        list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_posix.c)
+        # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_posix.c)
     elseif(UCLIENT_PLATFORM_POSIX_NOPOLL)
-        list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_posix_nopoll.c)
+        # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_posix_nopoll.c)
     elseif(UCLIENT_PLATFORM_WINDOWS)
-        list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_windows.c)
+        # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_windows.c)
     elseif(UCLIENT_PLATFORM_FREERTOS_PLUS_TCP)
-        list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_freertos_plus_tcp.c)
+        # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_freertos_plus_tcp.c)
     elseif(UCLIENT_PLATFORM_RTEMS_BSD_NET)
-        list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_rtems_bsd_net.c)
+        # list(APPEND _transport_src src/c/profile/transport/ip/udp/udp_transport_rtems_bsd_net.c)
     endif()
 endif()
 
@@ -139,7 +139,7 @@ if(UCLIENT_PROFILE_DISCOVERY)
 endif()
 
 if(UCLIENT_PROFILE_CUSTOM_TRANSPORT)
-    list(APPEND _transport_src src/c/profile/transport/custom/custom_transport.c)
+    # list(APPEND _transport_src src/c/profile/transport/custom/custom_transport.c)
 endif()
 
 if(UCLIENT_PROFILE_SHARED_MEMORY)
@@ -178,7 +178,7 @@ set(SRCS
     selfcom_transport.c
     queue.c
     # src/c/profile/transport/tp_socket.c
-    $<$<BOOL:${UCLIENT_PROFILE_MULTITHREAD}>:src/c/profile/multithread/multithread.c>
+    # src/c/profile/multithread/multithread.c
     $<$<BOOL:${UCLIENT_PROFILE_SHARED_MEMORY}>:src/c/profile/shared_memory/shared_memory.c>
     $<$<BOOL:${UCLIENT_PROFILE_MATCHING}>:src/c/profile/matching/matching.c>
     $<$<BOOL:${UCLIENT_PROFILE_STREAM_FRAMING}>:src/c/profile/transport/stream_framing/stream_framing_protocol.c>
