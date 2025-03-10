@@ -155,7 +155,7 @@ void read_submessage_format(
     }
 }
 
-inline void read_format_data(
+void read_format_data(
         uxrSession* session,
         ucdrBuffer* ub,
         const uint16_t length,

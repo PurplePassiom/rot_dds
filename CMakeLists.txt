@@ -177,8 +177,10 @@ set(SRCS
     src/c/core/session/write_access.c
     selfcom_transport.c
     queue.c
+    session_manager_config.c
+    session_manager.c
     # src/c/profile/transport/tp_socket.c
-    # src/c/profile/multithread/multithread.c
+    src/c/profile/multithread/multithread.c
     $<$<BOOL:${UCLIENT_PROFILE_SHARED_MEMORY}>:src/c/profile/shared_memory/shared_memory.c>
     $<$<BOOL:${UCLIENT_PROFILE_MATCHING}>:src/c/profile/matching/matching.c>
     $<$<BOOL:${UCLIENT_PROFILE_STREAM_FRAMING}>:src/c/profile/transport/stream_framing/stream_framing_protocol.c>
