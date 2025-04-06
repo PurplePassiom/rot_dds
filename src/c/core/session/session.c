@@ -47,7 +47,7 @@
 static bool listen_message(
         uxrSession* session,
         int poll_ms);
-static bool listen_message_reliably(
+bool listen_message_reliably(
         uxrSession* session,
         int poll_ms);
 
@@ -147,7 +147,6 @@ static bool run_session_until_sync(
 
 void uxr_init_session(
         uxrSession* session,
-        uint8_t session_id,
         uxrCommunication* comm,
         uint32_t key)
 {
@@ -169,8 +168,15 @@ void uxr_init_session(
     session->time_offset = 0;
     session->synchronized = false;
 
-    uxr_init_session_info(&session->info, session_id, key);
+    uxr_init_session_info(&session->info, key);
     uxr_init_stream_storage(&session->streams);
+}
+
+void urx_update_session_id(uxrSession* session, uint8_t session_id)
+{
+    UXR_LOCK_SESSION(session);
+    session->info.id = session_id;
+    UXR_UNLOCK_SESSION(session);
 }
 
 void uxr_set_status_callback(
@@ -318,15 +324,14 @@ uxrStreamId uxr_create_input_reliable_stream(
 {
     return uxr_add_input_reliable_buffer(&session->streams, buffer, size, history, on_get_fragmentation_info);
 }
-#include<stdio.h>
 bool uxr_run_session_time(
         uxrSession* session,
         int timeout_ms)
 {
     UXR_LOCK_SESSION(session);
-
     uxr_flash_output_streams(session);
     listen_message_reliably(session, timeout_ms);
+    UXR_UNLOCK_SESSION(session);
 #if 0
     bool timeout = false;
     while (!timeout)
@@ -614,7 +619,7 @@ void uxr_flash_output_streams(
 
         if (uxr_prepare_best_effort_buffer_to_send(stream, &buffer, &length, &seq_num))
         {
-            uxr_stamp_session_header(&session->info, id.raw, seq_num, buffer);
+            // uxr_stamp_session_header(&session->info, id.raw, seq_num, buffer);
             send_message(session, buffer, length);
         }
 
@@ -857,6 +862,35 @@ void read_message(
     }
 }
 
+
+void read_custom_data(
+    uxrSession* session,
+    ucdrBuffer* ub,
+    uxrStreamId stream_id)
+{
+    uint32_t length = 0;
+    ucdrBuffer temp_buffer;
+    ucdr_init_buffer(&temp_buffer, ub->iterator, (size_t)(ub->final - ub->iterator));
+    ucdr_set_on_full_buffer_callback(&temp_buffer, ub->on_full_buffer, ub->args);
+    if (ub->args)
+    {
+        uxrInputReliableStream* stream = (uxrInputReliableStream*) ub->args;
+        stream->cleanup_flag = false;
+    }
+
+    if (NULL != session->on_topic)
+    {
+        uxrObjectId object_id = {0};
+        ucdr_deserialize_array_uint8_t(&temp_buffer, (uint8_t*)&object_id.id, 1);
+        ucdr_deserialize_array_uint8_t(&temp_buffer, (uint8_t*)&length, 4);
+        session->on_topic(session, object_id, 0, stream_id, &temp_buffer, length,
+                session->on_topic_args);
+        session->on_data_flag = true;
+    }
+//    ucdr_advance_buffer(ub, length);
+}
+
+
 void read_stream(
         uxrSession* session,
         ucdrBuffer* ub,
@@ -874,10 +908,14 @@ void read_stream(
         case UXR_BEST_EFFORT_STREAM:
         {
             uxrInputBestEffortStream* stream = uxr_get_input_best_effort_stream(&session->streams, stream_id.index);
+            #if 0
             if (stream && uxr_receive_best_effort_message(stream, seq_num))
             {
                 read_submessage_list(session, ub, stream_id);
             }
+            #else
+            read_custom_data(session, ub, stream_id);
+            #endif
             break;
         }
         case UXR_RELIABLE_STREAM:
@@ -1208,14 +1246,18 @@ bool uxr_prepare_stream_to_write_submessage(
         uint8_t mode)
 {
     bool available = false;
+    #if 1 //URX_SIMPLE
+    size_t submessage_size = payload_size;
+    #else
     size_t submessage_size = SUBHEADER_SIZE + payload_size + uxr_submessage_padding(payload_size);
-
+    #endif
     switch (stream_id.type)
     {
         case UXR_BEST_EFFORT_STREAM:
         {
             uxrOutputBestEffortStream* stream = uxr_get_output_best_effort_stream(&session->streams, stream_id.index);
             available = stream && uxr_prepare_best_effort_buffer_to_write(stream, submessage_size, ub);
+            uxr_serialize_message_header(ub, session->info.id, stream_id.raw, 0, NULL);
             break;
         }
         case UXR_RELIABLE_STREAM:

@@ -2,7 +2,6 @@
 
 #include <uxr/client/core/session/session.h>
 #include "../../core/session/stream/stream_storage_internal.h"
-
 //==================================================================
 //                             PRIVATE
 //==================================================================

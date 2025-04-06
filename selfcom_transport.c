@@ -1,215 +1,122 @@
 #include <uxr/client/core/communication/communication.h>
 
-#include "queue.h"
-#include "FreeRTOS.h"
-// #include "selfcom_transport.h"
+#include "pqueue.h"
+#include "selfcom_transport.h"
+#include "session_manager.h"
 
 #define SELF_COM_TRANSPORT_BUFFER_SIZE      512
 #define SELF_COM_TRANSPORT_RX_SIZE          256
-#define CAN_TRANSPORT_MTU                   31
-
-#define DDS_RX_EVENT                        0x01
-
-#define TX_REQUEST_EVENT                    0x01
-#define TX_CONFIRM_EVENT                    0x02
-#define RX_COMPLETED_EVENT                  0x04
-
-#define MSGLEN_OFFSET                       5u
-#define DESTIN_OFFSET                       9u
-#define DATA_OFFSET                         11u
-#define GET_MSGLEN(buf)                     *((uint16_t*)(buf+MSGLEN_OFFSET))
-#define GET_SRCID(buf)                      ((buf[0])&0x7f)
-#define GET_DESID(buf)                      ((buf[DESTIN_OFFSET])&0xf)
 
 typedef struct
 {
     bool is_inited;
     uint8_t ipc_buff[SELF_COM_TRANSPORT_BUFFER_SIZE];
     uint8_t rx_buff[SELF_COM_TRANSPORT_RX_SIZE];
-    VLQueue_ccb_t can_tx_queue;
-    VLQueue_ccb_t can_rx_queue;
-} can_tp_type;
+    VLQueue_ccb_t self_com_queue;
+} self_com_tp_type;
 
-static can_tp_type can;
-static uxrCommunication can_urxCom;
-TaskHandle_t canTp_handle;
-StaticEventGroup_t canTp_eventGroup;
-StaticEventGroup_t dds_rxEventGroup;
-EventGroupHandle_t canTp_eventGroupHandle;
-EventGroupHandle_t dds_rxEventHandle;
+static self_com_tp_type self_com;
+static uxrCommunication self_com_urxCom;
 
-static bool send_can_msg(
+#include <stdio.h>
+static bool send_self_com_msg(
         void* instance,
         const uint8_t* buf,
         size_t len)
 {
+    
     bool rv = false;
-    uint16_t msgLen = GET_MSGLEN(buf);
-    if (can.is_inited == false)
-    {
-        rv = false;
-    }
-    else if (len > CAN_TRANSPORT_MTU)
+    if (self_com.is_inited == false)
     {
         rv = false;
     }
     else
     {
-        uint8_t srcId = GET_SRCID(buf);
-        uint8_t desId = GET_DESID(buf);
-        uint16_t id = (srcId << 8) | desId;
-        //check srcId and desId is valid
-        if (srcId > 0x7f || desId > 0x7f)
+        if (!queue_push(&self_com.self_com_queue, buf, len))
         {
-            rv = false;
+            rv = true;
+            session_set_event(0);
         }
-        else
-        {
-            portENTER_CRITICAL();
-            if (!queue_push(&can.can_tx_queue, (const uint8_t *)&id, 2))
-            {
-                if (!queue_push(&can.can_tx_queue, buf+DATA_OFFSET, msgLen))
-                {
-                    rv = true;
-                }
-                else
-                {
-                    rv = false;
-                    //dequeue previous id
-                    queue_pop(&can.can_tx_queue, NULL, 2);
-                }
-            }
-            else
-            {
-                rv = false;
-                //ERROR
-            }
-            portEXIT_CRITICAL();
-            if (rv == true)
-            {
-                xEventGroupSetBits(canTp_eventGroupHandle, TX_REQUEST_EVENT);
-            }
-        }
+        // printf("\nrv:%d len:%d data: ",rv, len);
+        // for (size_t i = 0; i < len; i++)
+        // {
+        //     printf("%c",buf[i]);
+        // }
+        // printf("--------------send end\n");
     }
     return rv;
 }
 
-static bool recv_can_msg(
+static bool recv_self_com_msg(
         void* instance,
         uint8_t** buf,
         size_t* len,
         int timeout)
 {
+    //TODO: timeout
     bool rv = false;
-    if (can.is_inited == false)
+    if (self_com.is_inited == false)
+    {
+        rv = false;
+    }
+    else if (0 >= queue_size(&self_com.self_com_queue))
     {
         rv = false;
     }
     else
     {
-        EventBits_t events;
-        events = xEventGroupWaitBits(dds_rxEventHandle, 0, pdTRUE, pdTRUE, portMAX_DELAY);
-        /* read data from lower layer */
-        rv = (events > 0? true: false);
+        size_t size = queue_pop(&self_com.self_com_queue, self_com.rx_buff, SELF_COM_TRANSPORT_RX_SIZE);
+        // printf("\npop size:%d data:",size);
+        // for (size_t i = 0; i < size; i++)
+        // {
+        //     printf("%c",self_com.rx_buff[i]);
+        // }
+        // printf("--------pop end\n");
+        if (size)
+        {
+            *buf = self_com.rx_buff;
+            *len = size;
+            rv = true;
+        }
     }
     return rv;
 }
 
 
-static uint8_t get_can_error(
+static uint8_t get_self_com_error(
         void)
 {
     return 0;
 }
 
-static void request2send(void)
-{
-    uint16_t id;
-    uint8_t data[CAN_TRANSPORT_MTU];
-    int32_t msgLen;
-    /* check lower layer states */
-
-    portENTER_CRITICAL();
-    msgLen = queue_pop(&can.can_tx_queue, &id, 2);
-    if (msgLen == 2)
-    {
-        msgLen = queue_pop(&can.can_tx_queue, data, CAN_TRANSPORT_MTU);
-    }
-    else
-    {
-        /* error */
-    }
-    portEXIT_CRITICAL();
-
-    /* length is valided request to send */
-    if (msgLen)
-    {
-        /* request to send */
-    }
-}
-static void can_tpTask(void* pvParameters)
-{
-    for (;;)
-    {
-        EventBits_t events;
-        events = xEventGroupWaitBits(canTp_eventGroupHandle, 0, pdTRUE, pdTRUE, portMAX_DELAY);
-        if (events & TX_REQUEST_EVENT)
-        {
-            /* request can layer to send message */
-            request2send();
-        }
-        if (events & TX_CONFIRM_EVENT)
-        {
-            /* check is any data waiting to send */
-            request2send();
-        }
-        if (events & RX_COMPLETED_EVENT)
-        {
-            xEventGroupSetBits(dds_rxEventHandle, DDS_RX_EVENT);
-        }
-    }
-}
-
-bool can_transport_init(void)
+bool self_com_transport_init(void)
 {
     bool rv = false;
 
-    if (can.is_inited == false)
+    if (self_com.is_inited == true)
     {
-        rv = false;
+        rv = true;
     }
-    else if (queue_init(&can.can_tx_queue, can.ipc_buff, SELF_COM_TRANSPORT_BUFFER_SIZE))
+    //init self com queue
+    else if (!queue_init(&self_com.self_com_queue, self_com.ipc_buff, SELF_COM_TRANSPORT_BUFFER_SIZE))
     {
-        rv = false;
-    }
-    else if (queue_init(&can.can_rx_queue, can.rx_buff, SELF_COM_TRANSPORT_BUFFER_SIZE))
-    {
-        rv = false;
-    }
-    else
-    {
-        xTaskCreate( can_tpTask, "can_transport", 512, NULL, 10, &canTp_handle );
-        /* this event group is used to trigger tx and rx */
-        canTp_eventGroupHandle = xEventGroupCreateStatic(&canTp_eventGroup);
-        /* this event group is used to trigger dds rx thread */
-        dds_rxEventHandle = xEventGroupCreateStatic(&dds_rxEventGroup);
-
-        can_urxCom.instance = &can_urxCom;
-        can_urxCom.comm_error = get_can_error;
-        can_urxCom.send_msg = send_can_msg;
-        can_urxCom.recv_msg = recv_can_msg;
-        can.is_inited = true;
+        self_com_urxCom.instance = &self_com_urxCom;
+        self_com_urxCom.comm_error = get_self_com_error;
+        self_com_urxCom.send_msg = send_self_com_msg;
+        self_com_urxCom.recv_msg = recv_self_com_msg;
+        self_com.is_inited = true;
+        rv = true;
     }
     return rv;
 }
 
-bool can_transport_close(
+bool self_com_transport_close(
         void* transport)
 {
     bool rv = false;
-    if (transport == &can_urxCom)
+    if (transport == &self_com_urxCom)
     {
-        can.is_inited = false;
+        self_com.is_inited = false;
         rv = true;
     }
     else
@@ -219,7 +126,7 @@ bool can_transport_close(
     return rv;
 }
 
-void* can_get_instance_info(void)
+void* self_com_get_instance_info(void)
 {
-    return &can_urxCom;
+    return &self_com_urxCom;
 }

@@ -10,11 +10,12 @@ bool uxr_buffer_submessage_header(
         uint16_t length,
         uint8_t flags)
 {
+    #if 0
     ucdr_align_to(ub, 4);
     ub->endianness = UCDR_MACHINE_ENDIANNESS;
     flags = (uint8_t)(flags | ub->endianness);
     uxr_serialize_submessage_header(ub, submessage_id, flags, length);
-
+	#endif
     return ucdr_buffer_remaining(ub) >= length;
 }
 
@@ -25,7 +26,7 @@ bool uxr_read_submessage_header(
         uint8_t* flags)
 {
     ucdr_align_to(ub, 4);
-    bool ready_to_read = ucdr_buffer_remaining(ub) >= SUBHEADER_SIZE;
+    bool ready_to_read = ucdr_buffer_remaining(ub) > 0;
     if (ready_to_read)
     {
         uxr_deserialize_submessage_header(ub, submessage_id, flags, length);

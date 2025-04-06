@@ -23,7 +23,8 @@ bool uxr_receive_best_effort_message(
         uxrInputBestEffortStream* stream,
         uxrSeqNum seq_num)
 {
-    bool available_to_read = (0 > uxr_seq_num_cmp(stream->last_handled, seq_num));
+    // bool available_to_read = (0 > uxr_seq_num_cmp(stream->last_handled, seq_num));
+    bool available_to_read = true;
     if (available_to_read)
     {
         stream->last_handled = seq_num;

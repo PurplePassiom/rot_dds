@@ -93,7 +93,7 @@ bool uxr_serialize_ObjectId(
         const ObjectId* input)
 {
     bool ret = true;
-    ret &= ucdr_serialize_array_uint8_t(buffer, input->data, 2);
+    ret &= ucdr_serialize_array_uint8_t(buffer, input->data+1, 1);
     return ret;
 }
 
@@ -1607,7 +1607,7 @@ bool uxr_serialize_BaseObjectRequest(
         const BaseObjectRequest* input)
 {
     bool ret = true;
-    ret &= uxr_serialize_RequestId(buffer, &input->request_id);
+    // ret &= uxr_serialize_RequestId(buffer, &input->request_id);
     ret &= uxr_serialize_ObjectId(buffer, &input->object_id);
     return ret;
 }

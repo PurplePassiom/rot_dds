@@ -34,7 +34,6 @@ struct BaseObjectRequest;
 
 void uxr_init_session_info(
         uxrSessionInfo* info,
-        uint8_t id,
         uint32_t key);
 
 void uxr_buffer_create_session(

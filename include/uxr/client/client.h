@@ -14,7 +14,9 @@
 
 #ifndef _UXR_CLIENT_CLIENT_H_
 #define _UXR_CLIENT_CLIENT_H_
-
+#ifdef __cplusplus
+extern "C" {
+#endif // ifdef __cplusplus
 #include <uxr/client/config.h>
 
 #ifdef UCLIENT_PROFILE_DISCOVERY
@@ -30,5 +32,7 @@
 
 #include <uxr/client/transport.h>
 #include <uxr/client/profile/multithread/multithread.h>
-
+#ifdef __cplusplus
+}
+#endif // ifdef __cplusplus
 #endif // _UXR_CLIENT_CLIENT_H_

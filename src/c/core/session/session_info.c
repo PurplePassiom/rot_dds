@@ -27,10 +27,9 @@ static void process_delete_session_status(
 
 void uxr_init_session_info(
         uxrSessionInfo* info,
-        uint8_t id,
         uint32_t key)
 {
-    info->id = id;
+    // info->id = id;
     info->key[0] = (uint8_t)(key >> 24);
     info->key[1] = (uint8_t)((key << 8) >> 24);
     info->key[2] = (uint8_t)((key << 16) >> 24);
@@ -163,12 +162,12 @@ bool uxr_read_session_header(
         uint8_t* stream_id_raw,
         uxrSeqNum* seq_num)
 {
-    bool must_be_read = ucdr_buffer_remaining(ub) > MAX_HEADER_SIZE;
+    bool must_be_read = ucdr_buffer_remaining(ub) > MIN_HEADER_SIZE;
     if (must_be_read)
     {
         uint8_t session_id; uint8_t key[CLIENT_KEY_SIZE];
         uxr_deserialize_message_header(ub, &session_id, stream_id_raw, seq_num, key);
-
+        #if 0
         must_be_read = true;//session_id == info->id;
         if (must_be_read)
         {
@@ -177,6 +176,7 @@ bool uxr_read_session_header(
                 must_be_read = (0 == memcmp(key, info->key, CLIENT_KEY_SIZE));
             }
         }
+        #endif
     }
 
     return must_be_read;
@@ -185,7 +185,11 @@ bool uxr_read_session_header(
 uint8_t uxr_session_header_offset(
         const uxrSessionInfo* info)
 {
+    #if 0
     return (SESSION_ID_WITHOUT_CLIENT_KEY > info->id) ? MAX_HEADER_SIZE : MIN_HEADER_SIZE;
+    #else
+    return 0;
+    #endif
 }
 
 uint16_t uxr_init_base_object_request(

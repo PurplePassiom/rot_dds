@@ -223,10 +223,11 @@ typedef struct uxrSession
  */
 UXRDLLAPI void uxr_init_session(
         uxrSession* session,
-        uint8_t session_id,
         uxrCommunication* comm,
         uint32_t key);
 
+UXRDLLAPI void urx_update_session_id(uxrSession* session, 
+                                uint8_t session_id);
 /**
  * @brief Sets the status callback.
  *        This is called when a status message is received from the Agent.
