@@ -8,7 +8,6 @@
 #include "../../core/serialization/xrce_header_internal.h"
 #include "../../core/session/submessage_internal.h"
 #include "../../core/log/log_internal.h"
-#include "transport/udp_transport_datagram_internal.h"
 
 #include <string.h>
 
@@ -27,10 +26,12 @@ typedef struct CallbackData
 
 static void write_get_info_message(
         ucdrBuffer* ub);
+#if 0
 static bool listen_info_message(
         uxrUDPTransportDatagram* transport,
         int period,
         CallbackData* callback);
+#endif
 static bool read_info_headers(
         ucdrBuffer* ub);
 static bool read_info_message(
@@ -60,6 +61,7 @@ void uxr_discovery_agents(
         const TransportLocator* agent_list,
         size_t agent_list_size)
 {
+    #if 0
     CallbackData callback;
     callback.on_agent = on_agent_func;
     callback.args = args;
@@ -92,6 +94,7 @@ void uxr_discovery_agents(
         }
         uxr_close_udp_transport_datagram(&transport);
     }
+    #endif
 }
 
 //==================================================================
@@ -114,6 +117,7 @@ void write_get_info_message(
     (void) uxr_serialize_GET_INFO_Payload(ub, &payload);
 }
 
+#if 0
 bool listen_info_message(
         uxrUDPTransportDatagram* transport,
         int poll,
@@ -137,6 +141,7 @@ bool listen_info_message(
 
     return is_succeed;
 }
+#endif
 
 bool read_info_headers(
         ucdrBuffer* ub)
