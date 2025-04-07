@@ -1,3 +1,0 @@
-C:/Users/86182/Desktop/temp/build/CMakeFiles/PublishHelloWorldClient.dir
-C:/Users/86182/Desktop/temp/build/CMakeFiles/edit_cache.dir
-C:/Users/86182/Desktop/temp/build/CMakeFiles/rebuild_cache.dir

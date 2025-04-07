@@ -43,28 +43,6 @@ extern "C"
 #define UXR_CLEAN_SHARED_MEMORY()
 
 #endif // UCLIENT_PROFILE_SHARED_MEMORY
-
-void uxr_prepare_shared_memory(
-        uxrSession* session,
-        uxrObjectId entity_id,
-        ucdrBuffer* ub,
-        uint16_t data_size,
-        uint16_t request_id);
-
-void uxr_handle_shared_memory();
-
-void uxr_add_shared_memory_entity_xml(
-        uxrSession* session,
-        uxrObjectId entity_id,
-        const char* xml);
-
-void uxr_add_shared_memory_entity_bin(
-        uxrSession* session,
-        uxrObjectId entity_id,
-        const void* entity);
-
-void uxr_clean_shared_memory();
-
 #ifdef __cplusplus
 }
 #endif // ifdef __cplusplus

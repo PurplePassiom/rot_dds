@@ -18,7 +18,6 @@ typedef struct
 static self_com_tp_type self_com;
 static uxrCommunication self_com_urxCom;
 
-#include <stdio.h>
 static bool send_self_com_msg(
         void* instance,
         const uint8_t* buf,
