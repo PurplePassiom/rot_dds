@@ -9,8 +9,8 @@
 #include "session_manager.h"
 
 
-#define SELF_COM_TRANSPORT_BUFFER_SIZE      512
-#define SELF_COM_TRANSPORT_RX_SIZE          256
+#define SELF_COM_TRANSPORT_BUFFER_SIZE      64
+#define SELF_COM_TRANSPORT_RX_SIZE          64
 #define CAN_TRANSPORT_MTU                   7
 #define UXR_RX_BUFF                         32
 #define CAN_SF_SIZE                         8
@@ -262,7 +262,7 @@ void request2send(void)
     if ((msgLen > 0) && (msgLen <= CAN_TRANSPORT_MTU))
     {
         payload[0] = (uint8_t)msgLen;
-        if (false == send_message((uint32_t)(CAN_HEAD | id), payload, msgLen))
+        if (false == send_message((uint32_t)(CAN_HEAD | id), payload, msgLen+1))
         {
             //error
         }

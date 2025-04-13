@@ -4,8 +4,8 @@
 #include "selfcom_transport.h"
 #include "session_manager.h"
 
-#define SELF_COM_TRANSPORT_BUFFER_SIZE      512
-#define SELF_COM_TRANSPORT_RX_SIZE          256
+#define SELF_COM_TRANSPORT_BUFFER_SIZE      64
+#define SELF_COM_TRANSPORT_RX_SIZE          64
 
 typedef struct
 {

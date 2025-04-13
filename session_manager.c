@@ -137,7 +137,7 @@ bool session_manager_send(uint8_t fd, uint8_t des_id, uint8_t *data, uint16_t si
         .type = UXR_DATAREADER_ID
     };
     
-    uxr_prepare_output_stream(&session_fd->session, session_fd->output_stream, object, &ub, size);
+    uxr_prepare_output_stream(&session_fd->session, session_fd->output_stream, object, &ub, size+4);//+4 for length
     // uxr_prepare_output_stream(&session_fd->session, stream_buffer[src_id].output_stream, object, &ub, size+8);
     // printf("uxr_prepare_output_stream:%d\n",request_id);
     ucdr_serialize_sequence_char(&ub, (const char*)data, size);
