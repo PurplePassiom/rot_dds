@@ -179,8 +179,8 @@ void process_rx_fifo(uint32_t fifo) {
             bool rv;
             uint8_t head[3];
             uint8_t msgLen = buff[0];
-            head[0] = (uint8_t)(header.ExtId & 0xFF);
-            head[1] = (uint8_t)((header.ExtId >> 8) & 0xFF);
+            head[0] = (uint8_t)((header.ExtId >> 8) & 0xFF);
+            head[1] = (uint8_t)(header.ExtId & 0xFF);
             head[2] = msgLen;
             portENTER_CRITICAL();
             if (!queue_push(&can.canRx_queue, (const uint8_t *)head, 3))
@@ -219,7 +219,16 @@ void process_rx_fifo(uint32_t fifo) {
 // Send a CAN message on the bus
 bool send_message(uint32_t canId, uint8_t *data, uint8_t len) {
     if (HAL_CAN_GetError(handle_) != HAL_CAN_ERROR_NONE) {
+    	HAL_CAN_ResetError(handle_);
+		if (HAL_CAN_Start(handle_) == HAL_OK)
+			HAL_CAN_ActivateNotification(handle_, CAN_IT_TX_MAILBOX_EMPTY |
+				CAN_IT_RX_FIFO0_MSG_PENDING|CAN_IT_RX_FIFO0_OVERRUN |
+				CAN_IT_RX_FIFO1_MSG_PENDING|CAN_IT_RX_FIFO1_OVERRUN);
         return false;
+    }
+    else
+    {
+
     }
 
     CAN_TxHeaderTypeDef header;

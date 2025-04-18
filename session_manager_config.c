@@ -120,12 +120,10 @@ if (object_id.id > MAX_CALLBACK_NUM)
 }
 else
 {
-    uint32_t len = 0;
     uint8_t des_id = object_id.id;
     if (cb_table[des_id].cb != NULL)
     {
-        ucdr_deserialize_uint32_t(ub, &len);
-        cb_table[des_id].cb(des_id, ub->iterator, (uint16_t)len);
+        cb_table[des_id].cb(des_id, ub->iterator, (uint16_t)length);
     }
 }
 }

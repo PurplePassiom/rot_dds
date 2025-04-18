@@ -122,7 +122,7 @@ void session_set_on_topic(uint8_t expect_id, session_callbakc_type func)
     }
 }
 
-bool session_manager_send(uint8_t fd, uint8_t des_id, uint8_t *data, uint16_t size)
+bool session_manager_send(uint8_t fd, uint8_t src_id, uint8_t des_id, uint8_t *data, uint16_t size)
 {
     // bool res = false;
     if (fd >= SESSION_NUMBER || data == NULL || !size || des_id > 0x0f)
@@ -136,7 +136,7 @@ bool session_manager_send(uint8_t fd, uint8_t des_id, uint8_t *data, uint16_t si
         .id =des_id,
         .type = UXR_DATAREADER_ID
     };
-    
+    session_fd->session.info.id = src_id;
     uxr_prepare_output_stream(&session_fd->session, session_fd->output_stream, object, &ub, size+4);//+4 for length
     // uxr_prepare_output_stream(&session_fd->session, stream_buffer[src_id].output_stream, object, &ub, size+8);
     // printf("uxr_prepare_output_stream:%d\n",request_id);
