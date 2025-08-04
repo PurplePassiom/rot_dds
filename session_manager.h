@@ -5,15 +5,13 @@ extern "C" {
 #endif
 #include <stdint.h>
 #include <stdbool.h>
-// #include "session_manager_config.h"
-// #include <uxr/client/core/session/session.h>
-typedef void (*session_callbakc_type)(uint8_t to_id, uint8_t* data, uint16_t len);
 
-void sessionM_init(void);
+void session_manager_init(void);
 
-uint8_t sessionM_get_protocolfd(uint8_t protocol);
+uint8_t session_manager_get_protocolfd(uint8_t protocol);
 
-void session_set_on_topic(uint8_t expect_id, session_callbakc_type func);
+void session_set_on_topic(uint8_t expect_id, 
+    void (*session_callbakc)(uint8_t from_id, uint8_t to_id, uint8_t* data, uint16_t len));
 
 bool session_manager_send(uint8_t fd, uint8_t src_id, uint8_t des_id, uint8_t *data, uint16_t size);
 

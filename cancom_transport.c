@@ -1,10 +1,10 @@
-#include <uxr/client/core/communication/communication.h>
+#include <communication.h>
 
 #include "FreeRTOS.h"
 #include "event_groups.h"
 #include "task.h"
 #include "can.h"
-#include "pqueue.h"
+#include "lqueue.h"
 #include "cancom_tansport.h"
 #include "session_manager.h"
 
@@ -42,6 +42,14 @@ typedef struct
     VLQueue_ccb_t canRx_queue;
 } canTp_InfoType;
 
+typedef struct
+{
+    tx_indication tx_indication;
+    rx_confirmation rx_confirmation;
+    uint8_t protocol_id;
+}can_Cb_Type;
+
+static can_Cb_Type can_callback;
 static canTp_InfoType can;
 static uxrCommunication can_urxCom;
 TaskHandle_t canTp_handle;
@@ -317,6 +325,21 @@ static void can_tpTask(void* pvParameters)
     }
 }
 
+uint8_t can_registe_cb(tx_indication tx_ind, rx_confirmation rx_conf, uint8_t protocol_id)
+{
+    if (tx_ind != NULL && rx_conf != NULL)
+    {
+        can_callback.tx_indication = tx_ind;
+        can_callback.rx_confirmation = rx_conf;
+        can_callback.protocol_id = protocol_id;
+        return 0; // success
+    }
+    else
+    {
+        return 1; // error
+    }
+}
+
 bool can_transport_init(void)
 {
     bool rv = false;
@@ -335,7 +358,7 @@ bool can_transport_init(void)
     }
     else
     {
-        xTaskCreate( can_tpTask, "can_transport", 512, NULL, 11, &canTp_handle );
+        xTaskCreate( can_tpTask, "can_transport", 128, NULL, 11, &canTp_handle );
         /* this event group is used to trigger tx and rx */
         // canTp_eventGroupHandle = xEventGroupCreateStatic(&canTp_eventGroup);
         /* this event group is used to trigger dds rx thread */
@@ -345,6 +368,7 @@ bool can_transport_init(void)
         can_urxCom.comm_error = get_can_error;
         can_urxCom.send_msg = send_can_msg;
         can_urxCom.recv_msg = recv_can_msg;
+        can_urxCom.comm_registe_txrx = can_registe_cb;
         can.isInited = true;
 
         //start can interrupt

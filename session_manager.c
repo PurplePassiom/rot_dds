@@ -1,6 +1,5 @@
 #include "session_manager_config.h"
 #include "session_manager.h"
-#include "cmsis_os.h"
 
 typedef struct
 {
@@ -12,6 +11,11 @@ typedef struct
 }sessioin_fd_type;
 
 static sessioin_fd_type fds[SESSION_NUMBER];
+
+extern bool listen_message_reliably(uxrSession* session,int poll_ms);
+static void session_manager_tx_indication(uint8_t protocol_id);
+static void session_manager_rx_confirmation(uint8_t protocol_id);
+#if 0
 static osMessageQId dds_rx_event = NULL;
 static osMessageQId dds_tx_event = NULL;
 static osThreadId session_tx_thread = NULL;
@@ -19,8 +23,8 @@ static osThreadId session_rx_thread = NULL;
 
 void sessioin_rx_function(void const* parm);
 void sessioin_tx_function(void const* parm);
-
-static uxrCommunication* sessionM_get_com(uint8_t protocol)
+#endif
+static uxrCommunication* session_manager_get_com(uint8_t protocol)
 {
     uxrCommunication* com = NULL;
     switch (protocol)
@@ -32,7 +36,7 @@ static uxrCommunication* sessionM_get_com(uint8_t protocol)
         // com = uart_tp_instance_info();
         break;
     case SESSION_PROTOCOL_CAN_COM:
-        com = can_get_instance_info();
+        // com = can_get_instance_info();
         break;
     default:
         com = NULL;
@@ -41,26 +45,44 @@ static uxrCommunication* sessionM_get_com(uint8_t protocol)
     return com;
 }
 
-void sessionM_init(void)
+void session_manager_init(void)
 {
     /* Tempory to init transport layer */
     // uart_transport_init();
-    self_com_transport_init();
-    can_transport_init();
+    // self_com_transport_init();
+    // can_transport_init();
 
-    for (int i = 0; i < SESSION_NUMBER; i++)
+    for (uint8_t i = 0; i < SESSION_NUMBER; i++)
     {
         session_data_type* session_data = &sessions[i];
         sessioin_fd_type *sessioin_fd = &fds[i];
-        sessioin_fd->com = sessionM_get_com(session_data->protocol);
+
+        // init session fd
+        if (session_data->init_func != NULL)
+        {
+            session_data->init_func();
+        }
+        else
+        {
+            continue;
+        }
+
+        sessioin_fd->com = session_manager_get_com(session_data->protocol);
         if ((sessioin_fd->com == NULL))
         {
             // printf("session_data->id:%d fd->com:%d session_id:%d\n",session_data->id,(int)&sessioin_fd->com, session_id);
         }
         else
         {
+            /* registe rx confirmation and tx indication from tp moudle */
+            if (sessioin_fd->com->comm_registe_txrx)
+            {
+                sessioin_fd->com->comm_registe_txrx(session_manager_tx_indication, session_manager_rx_confirmation,
+                                                    i);
+            }
             /* init sessions */
             uxr_init_session(&sessioin_fd->session, sessioin_fd->com, 0);
+            
             /* init output stream and input stream */
             // for (size_t serid = 0; serid < MAX_SERVICE_ID; serid++)
             // {
@@ -78,6 +100,7 @@ void sessionM_init(void)
             sessioin_fd->isInited = true;
         }
     }
+    #if 0
     if ((dds_rx_event == NULL) || (dds_tx_event == NULL))
     {
         osMessageQDef(session_event, 8, uint8_t);
@@ -95,12 +118,13 @@ void sessionM_init(void)
         osThreadDef(session_rx_thread_def, sessioin_rx_function, osPriorityAboveNormal, 9, 512);
         session_rx_thread = osThreadCreate(osThread(session_rx_thread_def), NULL);
     }
+    #endif
 }
 
-uint8_t sessionM_get_protocolfd(uint8_t protocol)
+uint8_t session_manager_get_protocolfd(uint8_t protocol)
 {
     uint8_t protocol_fd = SESSION_PROTOCOL_INVALID;
-    for (int i = 0; i < SESSION_NUMBER; i++)
+    for (uint8_t i = 0; i < SESSION_NUMBER; i++)
     {
         if (sessions[i].protocol == protocol)
         {
@@ -110,15 +134,15 @@ uint8_t sessionM_get_protocolfd(uint8_t protocol)
     return protocol_fd;
 }
 
-void session_set_on_topic(uint8_t expect_id, session_callbakc_type func)
+void session_set_on_topic(uint8_t expect_id, void (*session_callbakc)(uint8_t from_id, uint8_t to_id, uint8_t* data, uint16_t len) )
 {
-    if (expect_id > MAX_CALLBACK_NUM || SESSIONM_CB_TABLE[expect_id].cb != NULL || func == NULL)
+    if (expect_id > MAX_CALLBACK_NUM || SESSIONM_CB_TABLE[expect_id].cb != NULL || session_callbakc == NULL)
     {
         //ERROR
     }
     else
     {
-        SESSIONM_CB_TABLE[expect_id].cb = func;
+        SESSIONM_CB_TABLE[expect_id].cb = session_callbakc;
     }
 }
 
@@ -127,25 +151,29 @@ bool session_manager_send(uint8_t fd, uint8_t src_id, uint8_t des_id, uint8_t *d
     // bool res = false;
     if (fd >= SESSION_NUMBER || data == NULL || !size || des_id > 0x0f)
     {
-        // printf("session_manager_send -1\n");
         return false;
     }
     ucdrBuffer ub;
     sessioin_fd_type* session_fd = &fds[fd];
+    
     uxrObjectId object = {
         .id =des_id,
         .type = UXR_DATAREADER_ID
     };
     session_fd->session.info.id = src_id;
     uxr_prepare_output_stream(&session_fd->session, session_fd->output_stream, object, &ub, size+4);//+4 for length
-    // uxr_prepare_output_stream(&session_fd->session, stream_buffer[src_id].output_stream, object, &ub, size+8);
-    // printf("uxr_prepare_output_stream:%d\n",request_id);
-    ucdr_serialize_sequence_char(&ub, (const char*)data, size);
 
-    osMessagePut(dds_tx_event, fd, 0);
+    UXR_LOCK_STREAM_ID(&session_fd->session, session_fd->output_stream);
+    ucdr_serialize_sequence_char(&ub, (const char*)data, size);
+    UXR_UNLOCK_STREAM_ID(&session_fd->session, session_fd->output_stream);
+
+    uxr_flash_output_streams(&fds[fd].session);
+
+    // osMessagePut(dds_tx_event, fd, 0);
     return true;
 }
 
+#if 0
 void sessioin_tx_function(void const * parm)
 {
     for (;;)
@@ -160,7 +188,6 @@ void sessioin_tx_function(void const * parm)
     }
 }
 
-extern bool listen_message_reliably(uxrSession* session,int poll_ms);
 void sessioin_rx_function(void const * parm)
 {
     for (;;)
@@ -178,4 +205,15 @@ void sessioin_rx_function(void const * parm)
 void session_set_event(uint8_t id)
 {
     osMessagePut(dds_rx_event, id, 0);
+}
+#endif
+
+static void session_manager_tx_indication(uint8_t protocol_id)
+{
+    (void)protocol_id;
+}
+
+static void session_manager_rx_confirmation(uint8_t protocol_id)
+{
+    listen_message_reliably(&fds[protocol_id].session, 0);
 }

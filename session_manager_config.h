@@ -4,12 +4,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include <uxr/client/client.h>
-#include <ucdr/microcdr.h>
+#include <client.h>
+#include <microcdr.h>
 
 #include "selfcom_transport.h"
-#include "uart_tansport.h"
-#include "cancom_tansport.h"
+// #include "communication.h"
+// #include "uart_tansport.h"
+// #include "cancom_tansport.h"
 
 #define MAX_SERVICE_ID 0x03u
 /* session protocols definition */
@@ -23,21 +24,25 @@ extern "C" {
 
 #define MAX_CALLBACK_NUM            0xFu
 
-typedef void (*session_callbakc_type)(uint8_t to_id, uint8_t* data, uint16_t len);
+typedef void (*session_callbakc_func)(uint8_t src_id, uint8_t to_id, uint8_t* data, uint16_t len);
+typedef bool (*session_init_func)(void);
 
 typedef struct
 {
     uint8_t id;
     uint8_t protocol;
+    session_init_func init_func;
     uint8_t* session_buffer;
     uint16_t buffer_size;
     uxrOnTopicFunc cb;
+    // tx_indication tp_tx_indication;
+    // rx_confirmation tp_rx_confirmation;
 }session_data_type;
 
 typedef struct
 {
-    session_callbakc_type cb;
-}sessionM_callback_type;
+    session_callbakc_func cb;
+}session_manager_callback_type;
 
 typedef struct
 {
@@ -49,7 +54,7 @@ typedef struct
 
 extern session_data_type sessions[SESSION_NUMBER];
 
-extern sessionM_callback_type cb_table[MAX_CALLBACK_NUM];
+extern session_manager_callback_type cb_table[MAX_CALLBACK_NUM];
 
 // extern session_stream_buffer_type stream_buffer[MAX_SERVICE_ID];
 #define SESSIONM_CB_TABLE           cb_table
