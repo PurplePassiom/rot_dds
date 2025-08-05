@@ -8,36 +8,37 @@
 #include "cancom_tansport.h"
 #include "session_manager.h"
 
-
-#define SELF_COM_TRANSPORT_BUFFER_SIZE      64
-#define SELF_COM_TRANSPORT_RX_SIZE          64
-#define CAN_TRANSPORT_MTU                   7
+/* frame control information */
+/**
+ * Buffer structure:
+ * byte0: source, byte1: destination, byte2~5: length, byte6~:data
+ * 
+*/
+#define HEAD                                2
+#define LENGTH                              4
+#define PAYLOAD_SIZE                        8
+#define BUFFER_SIZE                         (HEAD + LENGTH + PAYLOAD_SIZE)
 #define UXR_RX_BUFF                         32
-#define CAN_SF_SIZE                         8
 
+/* CAN transport events */
 #define DDS_RX_EVENT                        0x01
-
 #define TX_REQUEST_EVENT                    0x01
 #define TX_CONFIRM_EVENT                    0x02
 #define RX_COMPLETED_EVENT                  0x04
 #define RX_NOTIFICATION_FIFO0               0x08
 #define RX_NOTIFICATION_FIFO1               0x10
 
-#define SESSIONID_OFFSET                    0u
-#define MSGLEN_OFFSET                       2u
-#define DESTIN_OFFSET                       1u
-#define DATA_OFFSET                         6u
-#define GET_MSGLEN(buf)                     *(uint32_t *)(buf+MSGLEN_OFFSET)
-#define GET_SRCID(buf)                      ((buf[0])&0x7f)
-#define GET_DESID(buf)                      (uint8_t)(((buf[DESTIN_OFFSET])&0xf0) >> 4)
-
+/* utils */
 #define CAN_HEAD                            0x15A00000
+#define GET_MSGLEN(buf)                     *(uint32_t *)(buf+HEAD)
+#define PREPARE_CAN_ID(srcId, desId)        (CAN_HEAD|(srcId<<8)|desId)
 #define IS_HEAD_VALIDTE(canId)              ((canId & CAN_HEAD) == CAN_HEAD)
+
 typedef struct
 {
     bool isInited;
-    uint8_t txBuff[SELF_COM_TRANSPORT_BUFFER_SIZE];
-    uint8_t rxBuff[SELF_COM_TRANSPORT_RX_SIZE];
+    uint8_t txBuff[64];
+    uint8_t rxBuff[64];
     VLQueue_ccb_t canTx_queue;
     VLQueue_ccb_t canRx_queue;
 } canTp_InfoType;
@@ -52,13 +53,13 @@ typedef struct
 static can_Cb_Type can_callback;
 static canTp_InfoType can;
 static uxrCommunication can_urxCom;
-TaskHandle_t canTp_handle;
-StaticEventGroup_t canTp_eventGroup;
-StaticEventGroup_t dds_rxEventGroup;
-EventGroupHandle_t canTp_eventGroupHandle;
-EventGroupHandle_t dds_rxEventHandle;
-/********************************sessionid, streamid ************************/
-uint8_t udr_rxBuff[UXR_RX_BUFF]={0x0};
+static TaskHandle_t canTp_handle;
+// StaticEventGroup_t canTp_eventGroup;
+// StaticEventGroup_t dds_rxEventGroup;
+// EventGroupHandle_t canTp_eventGroupHandle;
+// EventGroupHandle_t dds_rxEventHandle;
+
+static uint8_t udr_rxBuff[UXR_RX_BUFF]={0x0};
 static CAN_HandleTypeDef* handle_ = &hcan;
 bool send_message(uint32_t canId, uint8_t *data, uint8_t len);
 
@@ -69,51 +70,29 @@ static bool send_can_msg(
 {
     bool rv = false;
     #if 1
-    uint16_t msgLen = GET_MSGLEN(buf);
     if (can.isInited == false)
     {
         rv = false;
     }
-    else if (msgLen > CAN_TRANSPORT_MTU)
+    else if (len > BUFFER_SIZE)
     {
         rv = false;
     }
     else
     {
-        uint8_t srcId = GET_SRCID(buf);
-        uint8_t desId = GET_DESID(buf);
-        uint16_t id = (srcId << 8) | desId;
-        //check srcId and desId is valid
-        if (srcId > 0x7f || desId > 0x7f)
+        portENTER_CRITICAL();
+        if (!queue_push(&can.canTx_queue, buf, len))
         {
-            rv = false;
+            rv = true;
         }
         else
         {
-            portENTER_CRITICAL();
-            if (!queue_push(&can.canTx_queue, (const uint8_t *)&id, 2))
-            {
-                if (!queue_push(&can.canTx_queue, buf+DATA_OFFSET, msgLen))
-                {
-                    rv = true;
-                }
-                else
-                {
-                    rv = false;
-                    //dequeue previous id
-                    queue_pop(&can.canTx_queue, NULL, 2);
-                }
-            }
-            else
-            {
-                rv = false;
-                //ERROR
-            }
-            portEXIT_CRITICAL();
-            if (rv == true)
-            {
-                xTaskNotify(canTp_handle,TX_REQUEST_EVENT, eSetBits);
-            }
+            rv = false;
+        }
+        portEXIT_CRITICAL();
+        if (rv == true)
+        {
+            xTaskNotify(canTp_handle,TX_REQUEST_EVENT, eSetBits);
         }
     }
     #endif
@@ -140,28 +119,14 @@ static bool recv_can_msg(
         // events = xEventGroupWaitBits(dds_rxEventHandle, 0, pdTRUE, pdTRUE, portMAX_DELAY);
         /* read data from lower layer */
         portENTER_CRITICAL();
-        /* pop source id and destination id */
-        msgLen = queue_pop(&can.canRx_queue, (uint8_t*)head, 3);
-        if (msgLen == 3)
-        {
-            /* pop send data */
-            msgLen = queue_pop(&can.canRx_queue, udr_rxBuff+DATA_OFFSET, CAN_TRANSPORT_MTU);
-        }
-        else
-        {
-            /* error */
-        }
+
+        /* pop send data */
+        msgLen = queue_pop(&can.canRx_queue, udr_rxBuff, CAN_TRANSPORT_MTU);
         portEXIT_CRITICAL();
         if (msgLen)
         {
-            //Destination id is the session id which is in first byte
-            udr_rxBuff[SESSIONID_OFFSET] = head[0];
-            //source id is the object id
-            udr_rxBuff[DESTIN_OFFSET] = head[1];
-            //message length 
-            udr_rxBuff[MSGLEN_OFFSET] = head[2];
             *buf = udr_rxBuff;
-            *len = msgLen + DATA_OFFSET;
+            *len = msgLen;
             rv = true;
         }
     }
@@ -178,41 +143,33 @@ static uint8_t get_can_error(
 void process_rx_fifo(uint32_t fifo) {
     while (HAL_CAN_GetRxFifoFillLevel(handle_, fifo)) {
         CAN_RxHeaderTypeDef header;
-        uint8_t buff[64];
-        HAL_CAN_GetRxMessage(handle_, fifo, &header, buff);
+        uint8_t buff[BUFFER_SIZE];
+        HAL_CAN_GetRxMessage(handle_, fifo, &header, &buff[HEAD+LENGTH]);
         if ((header.IDE == CAN_ID_EXT) && 
             (IS_HEAD_VALIDTE(header.ExtId)) &&
-            (header.DLC <= CAN_SF_SIZE))
+            (header.DLC <= PAYLOAD_SIZE))
         {
             bool rv;
-            uint8_t head[3];
-            uint8_t msgLen = buff[0];
-            head[0] = (uint8_t)((header.ExtId >> 8) & 0xFF);
-            head[1] = (uint8_t)(header.ExtId & 0xFF);
-            head[2] = msgLen;
+            buff[0] = (uint8_t)((header.ExtId >> 8) & 0xFF);//srcId
+            buff[1] = (uint8_t)(header.ExtId & 0xFF);//desId
+            buff[2] = header.DLC; //update length
             portENTER_CRITICAL();
-            if (!queue_push(&can.canRx_queue, (const uint8_t *)head, 3))
+            if (!queue_push(&can.canRx_queue, (const uint8_t *)buff, HEAD+LENGTH+header.DLC))
             {
-                if (!queue_push(&can.canRx_queue, buff+1, msgLen))
-                {
-                    rv = true;
-                }
-                else
-                {
-                    rv = false;
-                    //dequeue previous id
-                    queue_pop(&can.canRx_queue, NULL, 2);
-                }
+                rv = true;
             }
             else
             {
                 rv = false;
-                //ERROR
             }
             portEXIT_CRITICAL();
             if (rv == true)
             {
-                session_set_event(2);
+                if (can_callback.rx_confirmation != NULL)
+                {
+                    can_callback.rx_confirmation(can_callback.protocol_id);
+                }
+                // session_set_event(2);
                 //xEventGroupSetBits(dds_rxEventHandle, DDS_RX_EVENT);
                 // xEventGroupSetBits(dds_rxEventHandle, RX_COMPLETED_EVENT);
             }
@@ -259,27 +216,18 @@ void request2send(void)
 {
     int32_t msgLen;
     uint16_t id;
-    uint8_t payload[CAN_TRANSPORT_MTU];
+    uint8_t buffer[BUFFER_SIZE];
 
-    /* check lower layer(CAN) status */
+    /* TODO: check lower layer(CAN) status */
 
     portENTER_CRITICAL();
     /* pop source id and destination id */
-    msgLen = queue_pop(&can.canTx_queue, (uint8_t *)&id, 2);
-    if (msgLen == 2)
-    {
-        /* pop send data */
-        msgLen = queue_pop(&can.canTx_queue, payload + 1, CAN_TRANSPORT_MTU); //OFFSET one byte for length
-    }
-    else
-    {
-        /* error */
-    }
+    msgLen = queue_pop(&can.canTx_queue, buffer, BUFFER_SIZE);
+
     portEXIT_CRITICAL();
-    if ((msgLen > 0) && (msgLen <= CAN_TRANSPORT_MTU))
+    if ((0 < msgLen) && (msgLen <= PAYLOAD_SIZE))
     {
-        payload[0] = (uint8_t)msgLen;
-        if (false == send_message((uint32_t)(CAN_HEAD | id), payload, msgLen+1))
+        if (false == send_message(PREPARE_CAN_ID(buffer[0], buffer[1]), buffer+HEAD+LENGTH, msgLen-HEAD-LENGTH))
         {
             //error
         }
@@ -334,10 +282,7 @@ uint8_t can_registe_cb(tx_indication tx_ind, rx_confirmation rx_conf, uint8_t pr
         can_callback.protocol_id = protocol_id;
         return 0; // success
     }
-    else
-    {
-        return 1; // error
-    }
+    return 1; // error
 }
 
 bool can_transport_init(void)
@@ -348,11 +293,11 @@ bool can_transport_init(void)
     {
         rv = false;
     }
-    else if (queue_init(&can.canTx_queue, can.txBuff, SELF_COM_TRANSPORT_BUFFER_SIZE))
+    else if (queue_init(&can.canTx_queue, can.txBuff, PAYLOAD_SIZE))
     {
         rv = false;
     }
-    else if (queue_init(&can.canRx_queue, can.rxBuff, SELF_COM_TRANSPORT_RX_SIZE))
+    else if (queue_init(&can.canRx_queue, can.rxBuff, PAYLOAD_SIZE))
     {
         rv = false;
     }

@@ -23,6 +23,8 @@ tx_indication self_com_tx_indication = NULL;
 rx_confirmation self_com_rx_confirmation = NULL;
 uint8_t self_com_allocted_id;
 static self_com_tp_type self_com;
+static EventGroupHandle_t self_com_event_handl;
+static StaticEventGroup_t self_com_event;
 static uxrCommunication self_com_urxCom;
 
 // static THD_WORKING_AREA(selfcom_thread_wa, 512);
@@ -37,8 +39,6 @@ static bool send_self_com_msg(
         size_t len)
 {
     (void) instance;
-    (void) buf;
-    (void) len;
     bool rv = false;
     if (self_com.is_inited == false)
     {
@@ -46,15 +46,15 @@ static bool send_self_com_msg(
     }
     else
     {
-        // memcpy(self_com.rx_buff, buf, len);
-        if(self_com_tx_indication != NULL)
-        {
-            self_com_tx_indication(self_com_allocted_id);
-        }
         if (!lqueue_push(&self_com.self_com_queue, buf, len))
         {
             rv = true;
+            xEventGroupSetBits(self_com_event_handl, 0x01u);
             // chEvtSignalI(selfcom_thread, (eventmask_t) 0x01);
+        }
+        if(self_com_tx_indication != NULL)
+        {
+            self_com_tx_indication(self_com_allocted_id);
         }
     }
     return rv;
@@ -81,12 +81,6 @@ static bool recv_self_com_msg(
     else
     {
         size_t size = lqueue_pop(&self_com.self_com_queue, self_com.rx_buff, SELF_COM_TRANSPORT_RX_SIZE);
-        // printf("\npop size:%d data:",size);
-        // for (size_t i = 0; i < size; i++)
-        // {
-        //     printf("%c",self_com.rx_buff[i]);
-        // }
-        // printf("--------pop end\n");
         *buf = self_com.rx_buff;
         *len = size;
         rv = true;
@@ -114,8 +108,8 @@ void selfcom_func(void *p)
     (void)p;
     while (1)
     {
-        // eventmask_t events = chEvtWaitAny(ALL_EVENTS);
-        if (0x01)
+        EventBits_t ev = xEventGroupWaitBits(self_com_event_handl, (EventBits_t) 0xFF, pdTRUE, pdFALSE, portMAX_DELAY);
+        if (ev & 0x01)
         {
             if(self_com_rx_confirmation != NULL)
             {
@@ -142,6 +136,7 @@ bool self_com_transport_init(void)
         self_com_urxCom.recv_msg = recv_self_com_msg;
         self_com_urxCom.comm_registe_txrx = registe_txrx_func;
         self_com.is_inited = true;
+        self_com_event_handl = xEventGroupCreateStatic(&self_com_event);
         xTaskCreate( selfcom_func, "self_com", 64, NULL, 11, &selfcom_thread );
         // selfcom_thread = chThdCreateStatic(selfcom_thread_wa, sizeof(selfcom_thread_wa), NORMALPRIO, selfcom_func, NULL);
         rv = true;
