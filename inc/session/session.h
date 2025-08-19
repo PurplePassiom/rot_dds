@@ -175,7 +175,7 @@ typedef uint8_t pong_status_t;
 typedef struct uxrSession
 {
     uxrSessionInfo info;
-    uxrStreamStorage streams;
+    uint8_t src_id;
     struct uxrCommunication* comm;
 
     const uint16_t* request_list;

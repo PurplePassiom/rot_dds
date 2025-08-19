@@ -1,9 +1,11 @@
 #include <communication.h>
 
 #include "ch.h"
+#include "hal.h"
 #include "lqueue.h"
 #include "cancom_tansport.h"
 #include "session_manager.h"
+#include <string.h>
 
 /* frame control information */
 /**
@@ -12,7 +14,7 @@
  * 
 */
 #define HEAD                                2
-#define LENGTH                              4
+#define LENGTH                              2
 #define PAYLOAD_SIZE                        8
 #define BUFFER_SIZE                         (HEAD + LENGTH + PAYLOAD_SIZE)
 #define UXR_RX_BUFF                         32
@@ -26,10 +28,10 @@
 #define RX_NOTIFICATION_FIFO1               0x10
 
 /* utils */
-#define CAN_HEAD                            0x15A00000
-#define GET_MSGLEN(buf)                     *(uint32_t *)(buf+HEAD)
-#define PREPARE_CAN_ID(srcId, desId)        (CAN_HEAD|(srcId<<8)|desId)
-#define IS_HEAD_VALIDTE(canId)              ((canId & CAN_HEAD) == CAN_HEAD)
+#define CAN_HEAD                                    0x15000000
+#define GET_MSGLEN(buf)                             *(uint32_t *)(buf+HEAD)
+#define PREPARE_CAN_ID(srcId, desId,subId)          (CAN_HEAD|(srcId<<16)|(desId<<8)|subId)
+#define IS_HEAD_VALIDTE(canId)                      ((canId & CAN_HEAD) == CAN_HEAD)
 
 typedef struct
 {
@@ -51,20 +53,20 @@ static can_Cb_Type can_callback;
 static canTp_InfoType can;
 static uxrCommunication can_urxCom;
 
-static mutex_t can_tp_mtx;
+static mutex_t can_tx_mtx;
+static mutex_t can_rx_mtx;
 thread_t *comm_tp;
 static THD_FUNCTION(can_tpTask, arg);
-static THD_WORKING_AREA(cantp_thread_wa, 256);
+static THD_WORKING_AREA(cantp_thread_wa, 512);
 
 static uint8_t udr_rxBuff[UXR_RX_BUFF]={0x0};
-static CAN_HandleTypeDef* handle_ = &hcan;
-bool send_message(uint32_t canId, uint8_t *data, uint8_t len);
 
 static bool send_can_msg(
         void* instance,
         const uint8_t* buf,
         size_t len)
 {
+    (void)instance;
     bool rv = false;
     #if 1
     if (can.isInited == false)
@@ -77,8 +79,15 @@ static bool send_can_msg(
     }
     else
     {
-        portENTER_CRITICAL();
-        if (!queue_push(&can.canTx_queue, buf, len))
+        #if 0
+        CANTxFrame txmsg;
+        chMtxLock(&can_tx_mtx);
+        txmsg.EID = PREPARE_CAN_ID(buf[0], buf[1], buf[HEAD + LENGTH]);
+        txmsg.DLC = buf[HEAD];//length
+        txmsg.IDE = CAN_IDE_EXT;
+	    txmsg.RTR = CAN_RTR_DATA;
+        memcpy(txmsg.data8, buf + HEAD + LENGTH, txmsg.DLC);
+        if (MSG_OK == canTransmit(&HW_CAN_DEV, CAN_ANY_MAILBOX, &txmsg, 10))
         {
             rv = true;
         }
@@ -86,11 +95,22 @@ static bool send_can_msg(
         {
             rv = false;
         }
-        portEXIT_CRITICAL();
+        chMtxUnlock(&can_tx_mtx);
+        #else
+        if (!lqueue_push(&can.canTx_queue, buf, len))
+        {
+            rv = true;
+        }
+        else
+        {
+            rv = false;
+        }
+        chMtxUnlock(&can_tx_mtx);
         if (rv == true)
         {
-            chEvtSignal(comm_tp, (eventmask_t) TX_REQUEST_EVENT);
+            chEvtSignalI(comm_tp, (eventmask_t) TX_REQUEST_EVENT);
         }
+        #endif
     }
     #endif
     return rv;
@@ -102,6 +122,8 @@ static bool recv_can_msg(
         size_t* len,
         int timeout)
 {
+    (void)timeout;
+    (void)instance;
     bool rv = false;
     if (can.isInited == false)
     {
@@ -109,17 +131,16 @@ static bool recv_can_msg(
     }
     else
     {
-        uint8_t head[3];
         int32_t msgLen;
         // EventBits_t events;
 
         // events = xEventGroupWaitBits(dds_rxEventHandle, 0, pdTRUE, pdTRUE, portMAX_DELAY);
         /* read data from lower layer */
-        portENTER_CRITICAL();
+        chMtxLock(&can_rx_mtx);
 
         /* pop send data */
-        msgLen = queue_pop(&can.canRx_queue, udr_rxBuff, CAN_TRANSPORT_MTU);
-        portEXIT_CRITICAL();
+        msgLen = lqueue_pop(&can.canRx_queue, udr_rxBuff, UXR_RX_BUFF);
+        chMtxUnlock(&can_rx_mtx);
         if (msgLen)
         {
             *buf = udr_rxBuff;
@@ -139,14 +160,15 @@ static uint8_t get_can_error(
 
 
 void receive_can_frame(uint32_t canid, uint8_t *data, uint8_t len) {
+    bool rv;
     uint8_t buffer[BUFFER_SIZE];
-
-    chMtxLock(&can_tp_mtx);
-    buffer[0] = (uint8_t)((canid >> 8) & 0xFF);//srcId
-    buffer[1] = (uint8_t)(canid & 0xFF);//desId
+    chMtxLock(&can_rx_mtx);
+    buffer[0] = (uint8_t)((canid >> 16) & 0xFF);//srcId
+    buffer[1] = (uint8_t)((canid>>8) & 0xFF);//desId
     buffer[2] = len; //update length
+    buffer[3] = 0;
     memcpy(&buffer[HEAD+LENGTH], data, len);
-    if (!queue_push(&can.canRx_queue, (const uint8_t *)buffer, HEAD+LENGTH+header.DLC))
+    if (!lqueue_push(&can.canRx_queue, (const uint8_t *)buffer, HEAD + LENGTH + len))
     {
         rv = true;
     }
@@ -154,74 +176,46 @@ void receive_can_frame(uint32_t canid, uint8_t *data, uint8_t len) {
     {
         rv = false;
     }
-    chMtxUnlock(&can_tp_mtx);
+    chMtxUnlock(&can_rx_mtx);
     if (rv == true)
     {
         chEvtSignal(comm_tp, (eventmask_t) RX_COMPLETED_EVENT);
     }
 }
 
-// Send a CAN message on the bus
-bool send_message(uint32_t canId, uint8_t *data, uint8_t len) {
-    if (HAL_CAN_GetError(handle_) != HAL_CAN_ERROR_NONE) {
-    	HAL_CAN_ResetError(handle_);
-		if (HAL_CAN_Start(handle_) == HAL_OK)
-			HAL_CAN_ActivateNotification(handle_, CAN_IT_TX_MAILBOX_EMPTY |
-				CAN_IT_RX_FIFO0_MSG_PENDING|CAN_IT_RX_FIFO0_OVERRUN |
-				CAN_IT_RX_FIFO1_MSG_PENDING|CAN_IT_RX_FIFO1_OVERRUN);
-        return false;
-    }
-    else
-    {
 
-    }
-
-    CAN_TxHeaderTypeDef header;
-    header.StdId = 0;
-    header.ExtId = canId;
-    header.IDE = CAN_ID_EXT;
-    header.RTR = CAN_RTR_DATA;
-    header.DLC = len;
-    header.TransmitGlobalTime = DISABLE;
-
-    uint32_t retTxMailbox = 0;
-    if (!HAL_CAN_GetTxMailboxesFreeLevel(handle_)) {
-        return false;
-    }
-
-    return HAL_CAN_AddTxMessage(handle_, &header, data, &retTxMailbox) == HAL_OK;
-}
-
-extern void comm_can_transmit_sid(uint32_t id, const uint8_t *data, uint8_t len);
 void request2send(void)
 {
-    int32_t msgLen;
-    uint16_t id;
+    int32_t msgLen = 0;
     uint8_t buffer[BUFFER_SIZE];
 
     /* TODO: check lower layer(CAN) status */
-
-    chMtxLock(&can_tp_mtx);
-    /* pop source id and destination id */
-    msgLen = queue_pop(&can.canTx_queue, buffer, BUFFER_SIZE);
-
-    chMtxUnlock(&can_tp_mtx);
-    if ((0 < msgLen) && (msgLen <= PAYLOAD_SIZE))
-    {
-        comm_can_transmit_sid(PREPARE_CAN_ID(buffer[0], buffer[1]), buffer+HEAD+LENGTH, msgLen-HEAD-LENGTH)
-    }
+    
+    do{
+        chMtxLock(&can_tx_mtx);
+        /* pop source id and destination id */
+        msgLen = lqueue_pop(&can.canTx_queue, buffer, BUFFER_SIZE);
+        if ((0 < msgLen))
+        {
+            CANTxFrame txmsg;
+            txmsg.EID = PREPARE_CAN_ID(buffer[0], buffer[1], buffer[HEAD + LENGTH]);
+            txmsg.DLC = buffer[HEAD];//length
+            txmsg.IDE = CAN_IDE_EXT;
+            txmsg.RTR = CAN_RTR_DATA;
+            memcpy(txmsg.data8, buffer + HEAD + LENGTH, txmsg.DLC);
+            canTransmit(&HW_CAN_DEV, CAN_ANY_MAILBOX, &txmsg, 10);
+        }
+        chMtxUnlock(&can_tx_mtx);
+    }while (msgLen > 0);
 }
 
 static void can_tpTask(void* arg)
 {
+    (void)arg;
     for (;;)
     {
         uint32_t events;
-        // events = xEventGroupWaitBits(canTp_eventGroupHandle, 0, pdTRUE, pdTRUE, portMAX_DELAY);
-        xTaskNotifyWait(0, //not clear when enter this function
-                        0xFFFFFFFF, //clear all bits when leaving this function
-                        &events,    //read events bits
-                        0xFFFFFFFF);//wait for max
+        events = chEvtWaitAny(ALL_EVENTS);
         if (events & TX_REQUEST_EVENT)
         {
             /* request can layer to send message */
@@ -243,12 +237,10 @@ static void can_tpTask(void* arg)
         /* received single can frame */
         if (events & RX_NOTIFICATION_FIFO0)
         {
-            process_rx_fifo(0);
             // HAL_CAN_ActivateNotification(handle_, CAN_IT_RX_FIFO0_MSG_PENDING);
         }
         if (events & RX_NOTIFICATION_FIFO1)
         {
-            process_rx_fifo(1);
             // HAL_CAN_ActivateNotification(handle_, CAN_IT_RX_FIFO1_MSG_PENDING);
         }
     }
@@ -274,18 +266,19 @@ bool can_transport_init(void)
     {
         rv = false;
     }
-    else if (queue_init(&can.canTx_queue, can.txBuff, PAYLOAD_SIZE))
+    else if (lqueue_init(&can.canTx_queue, can.txBuff, 64))
     {
         rv = false;
     }
-    else if (queue_init(&can.canRx_queue, can.rxBuff, PAYLOAD_SIZE))
+    else if (lqueue_init(&can.canRx_queue, can.rxBuff, 64))
     {
         rv = false;
     }
     else
     {
-        chMtxObjectInit(&can_tp_mtx);
-        comm_tp = chThdCreateStatic(cantp_thread_wa, sizeof(cantp_thread_wa), NORMALPRIO + 1,
+        chMtxObjectInit(&can_tx_mtx);
+        chMtxObjectInit(&can_rx_mtx);
+        comm_tp = chThdCreateStatic(cantp_thread_wa, sizeof(cantp_thread_wa), NORMALPRIO-2,
 			can_tpTask, NULL);
 
         can_urxCom.instance = &can_urxCom;

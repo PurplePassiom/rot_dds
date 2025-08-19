@@ -6,16 +6,17 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}/srcs/serialization/xrce_subheader.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/serialization/xrce_types.c 
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/object_id.c 
-    ${CMAKE_CURRENT_LIST_DIR}/srcs/session/read_access.c
+    # ${CMAKE_CURRENT_LIST_DIR}/srcs/session/read_access.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/session_info.c
-    ${CMAKE_CURRENT_LIST_DIR}/srcs/session/session.c
+    # ${CMAKE_CURRENT_LIST_DIR}/srcs/session/session.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/submessage.c
-    ${CMAKE_CURRENT_LIST_DIR}/srcs/session/write_access.c
+    # ${CMAKE_CURRENT_LIST_DIR}/srcs/session/write_access.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/util/ping.c
     ${CMAKE_CURRENT_LIST_DIR}/selfcom_transport.c
     ${CMAKE_CURRENT_LIST_DIR}/session_manager_config.c
     ${CMAKE_CURRENT_LIST_DIR}/session_manager.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/util/time.c
+    ${CMAKE_CURRENT_LIST_DIR}/cancom_transport.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/stream/stream_storage.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/stream/stream_id.c
     ${CMAKE_CURRENT_LIST_DIR}/srcs/session/stream/input_best_effort_stream.c

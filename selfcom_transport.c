@@ -5,7 +5,7 @@
 #include "lqueue.h"
 #include "FreeRTOS.h"
 #include "task.h"
-#include "event_groups.h"
+// #include "event_groups.h"
 // #include "ch.h"
 
 #define SELF_COM_TRANSPORT_BUFFER_SIZE      64
@@ -23,8 +23,8 @@ tx_indication self_com_tx_indication = NULL;
 rx_confirmation self_com_rx_confirmation = NULL;
 uint8_t self_com_allocted_id;
 static self_com_tp_type self_com;
-static EventGroupHandle_t self_com_event_handl;
-static StaticEventGroup_t self_com_event;
+// static EventGroupHandle_t self_com_event_handl = NULL;
+// static StaticEventGroup_t self_com_event = {0};
 static uxrCommunication self_com_urxCom;
 
 // static THD_WORKING_AREA(selfcom_thread_wa, 512);
@@ -49,7 +49,8 @@ static bool send_self_com_msg(
         if (!lqueue_push(&self_com.self_com_queue, buf, len))
         {
             rv = true;
-            xEventGroupSetBits(self_com_event_handl, 0x01u);
+            xTaskNotify(selfcom_thread, 0x01, eSetBits);
+            // xEventGroupSetBits(self_com_event_handl, 0x01u);
             // chEvtSignalI(selfcom_thread, (eventmask_t) 0x01);
         }
         if(self_com_tx_indication != NULL)
@@ -88,7 +89,6 @@ static bool recv_self_com_msg(
     return rv;
 }
 
-
 static uint8_t get_self_com_error(
         void)
 {
@@ -108,8 +108,14 @@ void selfcom_func(void *p)
     (void)p;
     while (1)
     {
-        EventBits_t ev = xEventGroupWaitBits(self_com_event_handl, (EventBits_t) 0xFF, pdTRUE, pdFALSE, portMAX_DELAY);
-        if (ev & 0x01)
+        uint32_t events;
+        // EventBits_t ev = xEventGroupWaitBits(
+		// 			self_com_event_handl, 0xFFF, pdTRUE, pdTRUE, portMAX_DELAY);
+        xTaskNotifyWait(0, //not clear when enter this function
+                        0xFFFFFFFF, //clear all bits when leaving this function
+                        &events,    //read events bits
+                        0xFFFFFFFF);//wait for max
+        if (events & 0x01)
         {
             if(self_com_rx_confirmation != NULL)
             {
@@ -119,6 +125,8 @@ void selfcom_func(void *p)
     }
 }
 
+StaticTask_t sc_statck;
+StackType_t sc_statck_buffer[128];
 bool self_com_transport_init(void)
 {
     bool rv = false;
@@ -136,8 +144,9 @@ bool self_com_transport_init(void)
         self_com_urxCom.recv_msg = recv_self_com_msg;
         self_com_urxCom.comm_registe_txrx = registe_txrx_func;
         self_com.is_inited = true;
-        self_com_event_handl = xEventGroupCreateStatic(&self_com_event);
-        xTaskCreate( selfcom_func, "self_com", 64, NULL, 11, &selfcom_thread );
+        // self_com_event_handl = xEventGroupCreate();
+        selfcom_thread = xTaskCreateStatic(selfcom_func, "self_com", 128, NULL, 10, sc_statck_buffer, &sc_statck);
+        // xTaskCreate( selfcom_func, "self_com", 128, NULL, 11, &selfcom_thread );
         // selfcom_thread = chThdCreateStatic(selfcom_thread_wa, sizeof(selfcom_thread_wa), NORMALPRIO, selfcom_func, NULL);
         rv = true;
     }

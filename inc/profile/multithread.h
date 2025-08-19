@@ -23,7 +23,7 @@ extern "C"
 #include "config.h"
 #include "visibility.h"
 #include "stream_id.h"
-struct uxrSession;
+struct uxrStreamStorage;
 
 #ifdef UCLIENT_PROFILE_MULTITHREAD
 
@@ -53,7 +53,7 @@ typedef struct uxrMutex
 } uxrMutex;
 
 UXRDLLAPI uxrMutex* uxr_get_stream_mutex_from_id(
-        struct uxrSession* session,
+        struct uxrStreamStorage* session,
         uxrStreamId stream_id);
 
 UXRDLLAPI void uxr_init_lock(
@@ -78,33 +78,33 @@ UXRDLLAPI void uxr_unlock(
 #define UXR_LOCK_TRANSPORT(comm) uxr_lock(&comm->mutex)
 #define UXR_UNLOCK_TRANSPORT(comm) uxr_unlock(&comm->mutex)
 
-#define UXR_LOCK_STREAM_ID(session, stream_id) { \
-        uxrMutex* stream_mutex = uxr_get_stream_mutex_from_id(session, stream_id); \
+#define UXR_LOCK_STREAM_ID(streams, stream_id) { \
+        uxrMutex* stream_mutex = uxr_get_stream_mutex_from_id(streams, stream_id); \
         if (stream_mutex != NULL){ \
             uxr_lock(stream_mutex); \
         } \
 }
 
-#define UXR_UNLOCK_STREAM_ID(session, stream_id){ \
-        uxrMutex* stream_mutex = uxr_get_stream_mutex_from_id(session, stream_id); \
+#define UXR_UNLOCK_STREAM_ID(streams, stream_id){ \
+        uxrMutex* stream_mutex = uxr_get_stream_mutex_from_id(streams, stream_id); \
         if (stream_mutex != NULL){ \
             uxr_unlock(stream_mutex); \
         } \
 }
 
-#define UXR_LOCK_ALL_INPUT_STREAMS(session) \
-    for (uint8_t i = 0; i < session->streams.input_best_effort_size; ++i){ \
-        uxr_lock(&session->streams.input_best_effort[i].mutex); } \
-    for (uint8_t i = 0; i < session->streams.input_reliable_size; ++i){ \
-        uxr_lock(&session->streams.input_reliable[i].mutex); \
+#define UXR_LOCK_ALL_INPUT_STREAMS(streams) \
+    for (uint8_t i = 0; i < streams->input_best_effort_size; ++i){ \
+        uxr_lock(&streams->input_best_effort[i].mutex); } \
+    for (uint8_t i = 0; i < streams->input_reliable_size; ++i){ \
+        uxr_lock(&streams->input_reliable[i].mutex); \
     }
 
-#define UXR_UNLOCK_ALL_INPUT_STREAMS(session) \
-    for (uint8_t i = 0; i < session->streams.input_best_effort_size; ++i){ \
-        uxr_unlock( &session->streams.input_best_effort[i].mutex); \
+#define UXR_UNLOCK_ALL_INPUT_STREAMS(streams) \
+    for (uint8_t i = 0; i < streams->input_best_effort_size; ++i){ \
+        uxr_unlock( &streams->input_best_effort[i].mutex); \
     } \
-    for (uint8_t i = 0; i < session->streams.input_reliable_size; ++i){  \
-        uxr_unlock( &session->streams.input_reliable[i].mutex); \
+    for (uint8_t i = 0; i < streams->input_reliable_size; ++i){  \
+        uxr_unlock( &streams->input_reliable[i].mutex); \
     }
 
 

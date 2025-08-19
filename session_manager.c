@@ -1,5 +1,8 @@
 #include "session_manager_config.h"
 #include "session_manager.h"
+#include "stream_storage_internal.h"
+#include "output_best_effort_stream_internal.h"
+#include "submessage_internal.h"
 
 typedef struct
 {
@@ -10,6 +13,7 @@ typedef struct
     uxrCommunication *com;
 }sessioin_fd_type;
 
+static uxrStreamStorage streams;
 static sessioin_fd_type fds[SESSION_NUMBER];
 
 extern bool listen_message_reliably(uxrSession* session,int poll_ms);
@@ -36,7 +40,7 @@ static uxrCommunication* session_manager_get_com(uint8_t protocol)
         // com = uart_tp_instance_info();
         break;
     case SESSION_PROTOCOL_CAN_COM:
-        // com = can_get_instance_info();
+        com = can_get_instance_info();
         break;
     default:
         com = NULL;
@@ -47,11 +51,6 @@ static uxrCommunication* session_manager_get_com(uint8_t protocol)
 
 void session_manager_init(void)
 {
-    /* Tempory to init transport layer */
-    // uart_transport_init();
-    // self_com_transport_init();
-    // can_transport_init();
-
     for (uint8_t i = 0; i < SESSION_NUMBER; i++)
     {
         session_data_type* session_data = &sessions[i];
@@ -80,23 +79,17 @@ void session_manager_init(void)
                 sessioin_fd->com->comm_registe_txrx(session_manager_tx_indication, session_manager_rx_confirmation,
                                                     i);
             }
-            /* init sessions */
-            uxr_init_session(&sessioin_fd->session, sessioin_fd->com, 0);
             
             /* init output stream and input stream */
-            // for (size_t serid = 0; serid < MAX_SERVICE_ID; serid++)
-            // {
-            //     stream_buffer[serid].output_stream = uxr_create_output_best_effort_stream(&sessioin_fd->session, 
-            //                                                                                stream_buffer[serid].stream_buffer, SESSION_BUFFER_SIZE);
-            //     stream_buffer[serid].input_stream = uxr_create_input_best_effort_stream(&sessioin_fd->session);
-            // }
-            sessioin_fd->output_stream = uxr_create_output_best_effort_stream(&sessioin_fd->session,
-                                                                               session_data->session_buffer,
-                                                                               session_data->buffer_size);
-            sessioin_fd->input_stream = uxr_create_input_best_effort_stream(&sessioin_fd->session);
-            urx_update_session_id(&sessioin_fd->session, (uint8_t)(session_data->id|0x80));
+            sessioin_fd->output_stream = uxr_add_output_best_effort_buffer(
+                                              &streams, //each channel has one output stream
+                                              session_data->session_buffer, //each channel has own output buffer
+                                              session_data->buffer_size,
+                                              0//header offset
+                                            );
+            sessioin_fd->input_stream = uxr_add_input_best_effort_buffer(&streams);
             /* set callback */
-            uxr_set_topic_callback(&sessioin_fd->session, session_data->cb, NULL);
+            // uxr_set_topic_callback(&sessioin_fd->session, session_data->cb, NULL);
             sessioin_fd->isInited = true;
         }
     }
@@ -148,65 +141,37 @@ void session_set_on_topic(uint8_t expect_id, void (*session_callbakc)(uint8_t fr
 
 bool session_manager_send(uint8_t fd, uint8_t src_id, uint8_t des_id, uint8_t *data, uint16_t size)
 {
-    // bool res = false;
     if (fd >= SESSION_NUMBER || data == NULL || !size || des_id > 0x0f)
     {
         return false;
     }
-    ucdrBuffer ub;
     sessioin_fd_type* session_fd = &fds[fd];
-    
-    uxrObjectId object = {
-        .id =des_id,
-        .type = UXR_DATAREADER_ID
-    };
-    session_fd->session.info.id = src_id;
-    uxr_prepare_output_stream(&session_fd->session, session_fd->output_stream, object, &ub, size+4);//+4 for length
+    UXR_LOCK_STREAM_ID(&streams, session_fd->output_stream);
+    ucdrBuffer ub;
+    uint8_t tempDestId = des_id;
 
-    UXR_LOCK_STREAM_ID(&session_fd->session, session_fd->output_stream);
-    ucdr_serialize_sequence_char(&ub, (const char*)data, size);
-    UXR_UNLOCK_STREAM_ID(&session_fd->session, session_fd->output_stream);
+    uxrOutputBestEffortStream* stream = uxr_get_output_best_effort_stream(&streams, session_fd->output_stream.index);
+    bool available = stream && uxr_prepare_best_effort_buffer_to_write(stream, size+4, &ub);
+    if (available)
+    {
+        ucdr_serialize_uint8_t(&ub, src_id);
+        ucdr_serialize_uint8_t(&ub, tempDestId);
+        ucdr_serialize_uint16_t(&ub, size);
+        ucdr_serialize_array_uint8_t(&ub, data, size);
+        uint8_t* buffer; size_t length; uxrSeqNum seq_num;
 
-    uxr_flash_output_streams(&fds[fd].session);
-
-    // osMessagePut(dds_tx_event, fd, 0);
+        if (uxr_prepare_best_effort_buffer_to_send(stream, &buffer, &length, &seq_num) && fds[fd].com->send_msg)
+        {
+            fds[fd].com->send_msg(fds[fd].com->instance, buffer, length);
+        }
+        UXR_UNLOCK_STREAM_ID(&streams, session_fd->output_stream);
+    }
+    else
+    {
+        UXR_UNLOCK_STREAM_ID(&streams, session_fd->output_stream);
+    }
     return true;
 }
-
-#if 0
-void sessioin_tx_function(void const * parm)
-{
-    for (;;)
-    {
-        uint8_t txFd;
-        osEvent event = osMessageGet(dds_tx_event, osWaitForever);
-        txFd = event.value.v;
-        if (txFd < SESSION_NUMBER)
-        {
-            uxr_flash_output_streams(&fds[txFd].session);
-        }
-    }
-}
-
-void sessioin_rx_function(void const * parm)
-{
-    for (;;)
-    {
-        uint8_t rxFd;
-        osEvent event = osMessageGet(dds_rx_event, osWaitForever);
-        rxFd = event.value.v;
-        if (rxFd < SESSION_NUMBER)
-        {
-            listen_message_reliably(&fds[rxFd].session, 0);
-        }
-    }
-}
-
-void session_set_event(uint8_t id)
-{
-    osMessagePut(dds_rx_event, id, 0);
-}
-#endif
 
 static void session_manager_tx_indication(uint8_t protocol_id)
 {
@@ -215,5 +180,21 @@ static void session_manager_tx_indication(uint8_t protocol_id)
 
 static void session_manager_rx_confirmation(uint8_t protocol_id)
 {
-    listen_message_reliably(&fds[protocol_id].session, 0);
+    uint8_t* data; size_t length;
+    UXR_LOCK_STREAM_ID(&streams, fds[protocol_id].input_stream);
+    bool received = fds[protocol_id].com->recv_msg(fds[protocol_id].com->instance, &data, &length, 0);
+    if (received)
+    {
+        ucdrBuffer ub; uint8_t src; uint8_t des; uint8_t payload_len;
+        ucdr_init_buffer(&ub, data, (uint32_t)length);
+        ucdr_deserialize_uint8_t(&ub, (uint8_t*)&src);
+        ucdr_deserialize_uint8_t(&ub, (uint8_t*)&des);
+        ucdr_deserialize_array_uint8_t(&ub, (uint8_t*)&payload_len, 2);
+        UXR_UNLOCK_STREAM_ID(&streams, fds[protocol_id].input_stream);
+        sessions[protocol_id].cb(protocol_id, src, des, ub.iterator, (uint16_t)payload_len);
+    }
+    else
+    {
+        UXR_UNLOCK_STREAM_ID(&streams, fds[protocol_id].input_stream);
+    }
 }

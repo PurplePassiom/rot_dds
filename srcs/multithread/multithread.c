@@ -1,6 +1,5 @@
 #include "multithread.h"
 
-#include "session.h"
 #include "stream_storage_internal.h"
 //==================================================================
 //                             PRIVATE
@@ -58,29 +57,29 @@ void uxr_unlock(
 }
 
 uxrMutex* uxr_get_stream_mutex_from_id(
-        struct uxrSession* session,
+        struct uxrStreamStorage* streams,
         uxrStreamId stream_id)
 {
     uxrMutex* mutex = NULL;
 
     if (stream_id.type == UXR_BEST_EFFORT_STREAM && stream_id.direction == UXR_OUTPUT_STREAM)
     {
-        uxrOutputBestEffortStream* stream = uxr_get_output_best_effort_stream(&session->streams, stream_id.index);
+        uxrOutputBestEffortStream* stream = uxr_get_output_best_effort_stream(streams, stream_id.index);
         mutex = (stream == NULL) ? NULL : &stream->mutex;
     }
     else if (stream_id.type == UXR_BEST_EFFORT_STREAM && stream_id.direction == UXR_INPUT_STREAM)
     {
-        uxrInputBestEffortStream* stream = uxr_get_input_best_effort_stream(&session->streams, stream_id.index);
+        uxrInputBestEffortStream* stream = uxr_get_input_best_effort_stream(streams, stream_id.index);
         mutex = (stream == NULL) ? NULL : &stream->mutex;
     }
     else if (stream_id.type == UXR_RELIABLE_STREAM && stream_id.direction == UXR_OUTPUT_STREAM)
     {
-        uxrOutputReliableStream* stream = uxr_get_output_reliable_stream(&session->streams, stream_id.index);
+        uxrOutputReliableStream* stream = uxr_get_output_reliable_stream(streams, stream_id.index);
         mutex = (stream == NULL) ? NULL : &stream->mutex;
     }
     else if (stream_id.type == UXR_RELIABLE_STREAM && stream_id.direction == UXR_INPUT_STREAM)
     {
-        uxrInputReliableStream* stream = uxr_get_input_reliable_stream(&session->streams, stream_id.index);
+        uxrInputReliableStream* stream = uxr_get_input_reliable_stream(streams, stream_id.index);
         mutex = (stream == NULL) ? NULL : &stream->mutex;
     }
 

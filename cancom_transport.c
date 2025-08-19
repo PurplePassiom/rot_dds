@@ -15,7 +15,7 @@
  * 
 */
 #define HEAD                                2
-#define LENGTH                              4
+#define LENGTH                              2
 #define PAYLOAD_SIZE                        8
 #define BUFFER_SIZE                         (HEAD + LENGTH + PAYLOAD_SIZE)
 #define UXR_RX_BUFF                         32
@@ -29,10 +29,10 @@
 #define RX_NOTIFICATION_FIFO1               0x10
 
 /* utils */
-#define CAN_HEAD                            0x15A00000
-#define GET_MSGLEN(buf)                     *(uint32_t *)(buf+HEAD)
-#define PREPARE_CAN_ID(srcId, desId)        (CAN_HEAD|(srcId<<8)|desId)
-#define IS_HEAD_VALIDTE(canId)              ((canId & CAN_HEAD) == CAN_HEAD)
+#define CAN_HEAD                                0x15000000
+#define GET_MSGLEN(buf)                         *(uint32_t *)(buf+HEAD)
+#define PREPARE_CAN_ID(srcId, desId,subId)      (CAN_HEAD|(srcId<<16)|(desId<<8)|(subId))
+#define IS_HEAD_VALIDTE(canId)                  ((canId & CAN_HEAD) == CAN_HEAD)
 
 typedef struct
 {
@@ -81,7 +81,7 @@ static bool send_can_msg(
     else
     {
         portENTER_CRITICAL();
-        if (!queue_push(&can.canTx_queue, buf, len))
+        if (!lqueue_push(&can.canTx_queue, buf, len))
         {
             rv = true;
         }
@@ -112,7 +112,6 @@ static bool recv_can_msg(
     }
     else
     {
-        uint8_t head[3];
         int32_t msgLen;
         // EventBits_t events;
 
@@ -121,7 +120,7 @@ static bool recv_can_msg(
         portENTER_CRITICAL();
 
         /* pop send data */
-        msgLen = queue_pop(&can.canRx_queue, udr_rxBuff, CAN_TRANSPORT_MTU);
+        msgLen = lqueue_pop(&can.canRx_queue, udr_rxBuff, UXR_RX_BUFF);
         portEXIT_CRITICAL();
         if (msgLen)
         {
@@ -150,11 +149,11 @@ void process_rx_fifo(uint32_t fifo) {
             (header.DLC <= PAYLOAD_SIZE))
         {
             bool rv;
-            buff[0] = (uint8_t)((header.ExtId >> 8) & 0xFF);//srcId
-            buff[1] = (uint8_t)(header.ExtId & 0xFF);//desId
+            buff[0] = (uint8_t)((header.ExtId >> 16) & 0xFF);//srcId
+            buff[1] = (uint8_t)((header.ExtId>>8) & 0xFF);//desId
             buff[2] = header.DLC; //update length
             portENTER_CRITICAL();
-            if (!queue_push(&can.canRx_queue, (const uint8_t *)buff, HEAD+LENGTH+header.DLC))
+            if (!lqueue_push(&can.canRx_queue, (const uint8_t *)buff, HEAD+LENGTH+header.DLC))
             {
                 rv = true;
             }
@@ -185,6 +184,8 @@ void process_rx_fifo(uint32_t fifo) {
 bool send_message(uint32_t canId, uint8_t *data, uint8_t len) {
     if (HAL_CAN_GetError(handle_) != HAL_CAN_ERROR_NONE) {
     	HAL_CAN_ResetError(handle_);
+        vTaskDelay(1000);
+        MX_CAN_Init();
 		if (HAL_CAN_Start(handle_) == HAL_OK)
 			HAL_CAN_ActivateNotification(handle_, CAN_IT_TX_MAILBOX_EMPTY |
 				CAN_IT_RX_FIFO0_MSG_PENDING|CAN_IT_RX_FIFO0_OVERRUN |
@@ -215,23 +216,26 @@ bool send_message(uint32_t canId, uint8_t *data, uint8_t len) {
 void request2send(void)
 {
     int32_t msgLen;
-    uint16_t id;
     uint8_t buffer[BUFFER_SIZE];
 
     /* TODO: check lower layer(CAN) status */
+    do{
+        portENTER_CRITICAL();
+        /* pop source id and destination id */
+        msgLen = lqueue_pop(&can.canTx_queue, buffer, BUFFER_SIZE);
 
-    portENTER_CRITICAL();
-    /* pop source id and destination id */
-    msgLen = queue_pop(&can.canTx_queue, buffer, BUFFER_SIZE);
-
-    portEXIT_CRITICAL();
-    if ((0 < msgLen) && (msgLen <= PAYLOAD_SIZE))
-    {
-        if (false == send_message(PREPARE_CAN_ID(buffer[0], buffer[1]), buffer+HEAD+LENGTH, msgLen-HEAD-LENGTH))
+        portEXIT_CRITICAL();
+        if ((0 < msgLen))
         {
-            //error
+            uint8_t len = buffer[2];
+            //todo: opminize the des id
+            if (false == send_message(PREPARE_CAN_ID(buffer[0], buffer[1], buffer[HEAD+LENGTH]), buffer+HEAD+LENGTH, len))
+            {
+                //error
+            }
         }
-    }
+    }while (msgLen > 0);
+    
 }
 
 static void can_tpTask(void* pvParameters)
@@ -257,7 +261,7 @@ static void can_tpTask(void* pvParameters)
         /* received completed packet */
         if (events & RX_COMPLETED_EVENT)
         {
-            xEventGroupSetBits(dds_rxEventHandle, DDS_RX_EVENT);
+            // xEventGroupSetBits(dds_rxEventHandle, DDS_RX_EVENT);
         }
         /* received single can frame */
         if (events & RX_NOTIFICATION_FIFO0)
@@ -285,6 +289,8 @@ uint8_t can_registe_cb(tx_indication tx_ind, rx_confirmation rx_conf, uint8_t pr
     return 1; // error
 }
 
+StackType_t cantp_stack_buff[128];
+StaticTask_t cantp_stack;
 bool can_transport_init(void)
 {
     bool rv = false;
@@ -293,21 +299,22 @@ bool can_transport_init(void)
     {
         rv = false;
     }
-    else if (queue_init(&can.canTx_queue, can.txBuff, PAYLOAD_SIZE))
+    else if (lqueue_init(&can.canTx_queue, can.txBuff, 64))
     {
         rv = false;
     }
-    else if (queue_init(&can.canRx_queue, can.rxBuff, PAYLOAD_SIZE))
+    else if (lqueue_init(&can.canRx_queue, can.rxBuff, 64))
     {
         rv = false;
     }
     else
     {
-        xTaskCreate( can_tpTask, "can_transport", 128, NULL, 11, &canTp_handle );
+        // xTaskCreate( can_tpTask, "can_transport", 128, NULL, 11, &canTp_handle );
+        canTp_handle = xTaskCreateStatic(can_tpTask, "can_transport", 128, NULL, 11, cantp_stack_buff, &cantp_stack);
         /* this event group is used to trigger tx and rx */
         // canTp_eventGroupHandle = xEventGroupCreateStatic(&canTp_eventGroup);
         /* this event group is used to trigger dds rx thread */
-        dds_rxEventHandle = xEventGroupCreateStatic(&dds_rxEventGroup);
+        // dds_rxEventHandle = xEventGroupCreateStatic(&dds_rxEventGroup);
 
         can_urxCom.instance = &can_urxCom;
         can_urxCom.comm_error = get_can_error;

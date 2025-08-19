@@ -8,10 +8,9 @@ extern "C" {
 #include <microcdr.h>
 
 #include "selfcom_transport.h"
-// #include "communication.h"
-// #include "uart_tansport.h"
-// #include "cancom_tansport.h"
+#include "cancom_tansport.h"
 
+#define CUSTOME_PROTOCOL
 #define MAX_SERVICE_ID 0x03u
 /* session protocols definition */
 #define SESSION_PROTOCOL_SELF_COM   1u
@@ -25,6 +24,7 @@ extern "C" {
 #define MAX_CALLBACK_NUM            0xFu
 
 typedef void (*session_callbakc_func)(uint8_t src_id, uint8_t to_id, uint8_t* data, uint16_t len);
+typedef void (*stream_callback)(uint8_t stream_index, uint8_t src_id, uint8_t to_id, uint8_t* data, uint16_t len);
 typedef bool (*session_init_func)(void);
 
 typedef struct
@@ -34,7 +34,11 @@ typedef struct
     session_init_func init_func;
     uint8_t* session_buffer;
     uint16_t buffer_size;
+    #ifdef CUSTOME_PROTOCOL
+    stream_callback cb;
+    #else
     uxrOnTopicFunc cb;
+    #endif
     // tx_indication tp_tx_indication;
     // rx_confirmation tp_rx_confirmation;
 }session_data_type;

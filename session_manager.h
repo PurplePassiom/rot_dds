@@ -15,8 +15,6 @@ void session_set_on_topic(uint8_t expect_id,
 
 bool session_manager_send(uint8_t fd, uint8_t src_id, uint8_t des_id, uint8_t *data, uint16_t size);
 
-void session_set_event(uint8_t id);
-
 #ifdef __cplusplus
 }
 #endif

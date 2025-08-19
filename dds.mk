@@ -4,13 +4,10 @@ DDSSRC =		dds/srcs/matching/matching.c \
 				dds/srcs/serialization/xrce_subheader.c \
 				dds/srcs/serialization/xrce_types.c \
 				dds/srcs/session/object_id.c \
-				dds/srcs/session/read_access.c \
 				dds/srcs/session/session_info.c \
-				dds/srcs/session/session.c \
 				dds/srcs/session/submessage.c \
-				dds/srcs/session/write_access.c \
-				dds/srcs/util/ping.c \
 				dds/selfcom_transport.c \
+				dds/cancom_tp.c \
 				dds/session_manager_config.c \
 				dds/session_manager.c \
 				dds/srcs/util/time.c \
